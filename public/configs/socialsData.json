@@ -2,16 +2,21 @@
   {
     "pos": { "x": 300, "y": 250 },
     "name": "GitHub",
+    "subtitle": "GitHub",
     "description": "GitHub is where I host my projects.",
     "link": "https://github.com/jslegenddev",
-    "logoData": { "name": "github-logo", "width": 228.6, "height": 179.5 }
+    "imageData": { 
+      "name": "github-logo", 
+      "width": 228.6, 
+      "height": 179.5 }
   },
   {
     "pos": { "x": 500, "y": 250 },
     "name": "YouTube",
+    "subtitle": "YouTube",
     "description": "I make JavaScript/TypeScript game dev courses there.",
     "link": "https://youtube.com/@jslegenddev",
-    "logoData": {
+    "imageData": {
       "name": "youtube-logo",
       "width": 160,
       "height": 110
@@ -20,9 +25,10 @@
   {
     "pos": { "x": 700, "y": 250 },
     "name": "X",
+    "subtitle": "X",
     "description": "Here is my X/Twitter, I don't really use it much.",
     "link": "https://x.com/jslegenddev",
-    "logoData": {
+    "imageData": {
       "name": "x-logo",
       "width": 128,
       "height": 128
@@ -31,9 +37,10 @@
   {
     "pos": { "x": 900, "y": 250 },
     "name": "Substack",
+    "subtitle": "Substack",
     "description": "I make written JavaScript/TypeScript game dev tutorials there.",
     "link": "https://jslegenddev.substack.com/",
-    "logoData": {
+    "imageData": {
       "name": "substack-logo",
       "width": 128,
       "height": 128
@@ -42,8 +49,9 @@
   {
     "pos": { "x": 1100, "y": 250 },
     "name": "Email",
+    "subtitle": "Email",
     "address": "jslegend@protonmail.com",
-    "logoData": {
+    "imageData": {
       "name": "email-logo",
       "width": 128,
       "height": 128

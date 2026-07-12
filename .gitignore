@@ -1,5 +1,8 @@
 node_modules
 
+# temporary home for the aesprite boards
+misc_art_stuff
+
 # Output
 .output
 .vercel

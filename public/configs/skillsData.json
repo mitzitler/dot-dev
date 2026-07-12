@@ -3,7 +3,7 @@
     "pos": { "x": 0, "y": 0 },
     "name": "JavaScript",
     "logoData": {
-      "name": "javascript-logo",
+      "name": "js-logo",
       "width": 128,
       "height": 128
     }
@@ -12,7 +12,7 @@
     "pos": { "x": -200, "y": 0 },
     "name": "TypeScript",
     "logoData": {
-      "name": "typescript-logo",
+      "name": "ts-logo",
       "width": 128,
       "height": 128
     }
