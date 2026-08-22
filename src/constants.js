@@ -18,3 +18,12 @@ export const PALETTE = {
     colorMaroon: "#8f325f",
     colorPink: "#eb6c98",
 };
+
+export const DIAGONAL_FACTOR = 1 / Math.sqrt(2);
+export const ZOOM_MAX_BOUND = 2;
+export const ZOOM_MIN_BOUND = 0.2;
+
+export const PARALLAX_WIDTH = 840; // or smaller? is that possible?
+export const PARALLAX_HEIGHT = 384;
+export const SCALE = 2.6; // at some point, scale will actually be determined by screen width, so not a constant
+export const DIST_FROM_CENTER_TO_GROUND_HEIGHT = 100;
