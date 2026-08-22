@@ -6,11 +6,11 @@ import ProjectModal from "./reactComponents/ProjectModal"
 export default function ReactUI() {
     return (
         <>
-            <p className="controls-message">Tap/Click around to move</p>
-            <CameraController />
+            {/* <p className="controls-message">Tap/Click around to move</p> */}
+            {/* <CameraController />
             <SocialModal />
             <EmailModal />
-            <ProjectModal />
+            <ProjectModal /> */}
         </>
     );
 }

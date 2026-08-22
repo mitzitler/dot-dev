@@ -4,14 +4,18 @@ import makeSection from "./components/Section";
 import makeSocialIcon from "./components/SocialIcon";
 import makeWorkExperienceCard from "./components/WorkExperienceCard";
 import makeProjectCard from "./components/ProjectCard";
-import { PALETTE } from "./constants";
+import { PALETTE, PARALLAX_HEIGHT, PARALLAX_WIDTH, SCALE, DIST_FROM_CENTER_TO_GROUND_HEIGHT } from "./constants";
 import makePlayer from "./entities/Player";
 import makeKaplayCtx from "./kaplayCtx";
 import { store } from "./store";
 import { cameraZoomValueAtom } from "./store";
 import { makeAppear } from "./utils";
+import makeGirlie from "./entities/Girlie";
+import makeBackground, { GROUND_SPEED, attachToScroll } from "./entities/Bg";
+import makeLightbulb from "./entities/Lightbulb";
 
 export default async function initGame() {
+
     const generalData = await( await fetch('./configs/generalData.json')).json();
     const socialsData = await( await fetch('./configs/socialsData.json')).json();
     const skillsData = await( await fetch('./configs/skillsData.json')).json();
@@ -19,7 +23,42 @@ export default async function initGame() {
     const projectsData = await( await fetch('./configs/projectsData.json')).json();
     
     const k = makeKaplayCtx();
-    k.loadSprite("player", "./sprites/player.png", {
+    k.loadSprite("bg-sky", "./sprites/bg-sky.png");
+    k.loadSprite("bg-clouds-back", "./sprites/bg-clouds-back.png");
+    k.loadSprite("bg-clouds-front", "./sprites/bg-clouds-front.png");
+    k.loadSprite("bg-mountains", "./sprites/bg-mountains.png");
+    k.loadSprite("bg-hills", "./sprites/bg-hills.png");
+    k.loadSprite("bg-trees-back", "./sprites/bg-trees-back.png");
+    k.loadSprite("bg-trees-front", "./sprites/bg-trees-front.png");
+    k.loadSprite("bg-ground", "./sprites/bg-ground.png");
+    k.loadSprite("bg-frame", "./sprites/bg-frame.png");
+
+
+    k.loadSprite("girlie", "./sprites/purple_girlie.png",
+        {
+        sliceX: 7,
+        sliceY: 6,
+        anims: {
+            "idle-right": {from: 0, to: 5, loop: true},
+            "idle-left": {from: 6, to: 11, loop: true},            
+            "walk-right": {frames: [0, 12, 13, 14, 15, 16, 17, 18], loop: true, speed: 12 },
+            "walk-left": {frames: [6, 19, 20, 21, 22, 23, 24, 25], loop: true, speed: 12 },
+            "lift-right": {frames: [26, 27, 28, 29, 30, 31, 32, 0], loop: false},
+            "lift-left": {frames: [33, 34, 35, 36, 37, 38, 39, 40, 6], loop: false}, 
+        }
+    });
+    k.loadSprite("lightbulb", "./sprites/lightbulb.png", 
+        {
+        sliceX: 3,
+        sliceY: 2,
+        anims: {
+            "off": 0,
+            "lighting": {from: 0, to: 5, loop: false, speed: 1.8},
+            "on": 5,
+        }
+    });
+    k.loadSprite("player", "./sprites/player.png", 
+        {
         
         // because this is a sheet with frames, we get to have addt'l code to specify those
         sliceX: 4, // 4 frames per row
@@ -69,6 +108,7 @@ export default async function initGame() {
     k.loadSprite("platformer-js", "./projects/platformer-js.png");
     // shader - look up diff between fragment shaders and vertex shaders
     k.loadShaderURL("tiledPattern", null, "./shaders/tiledPattern.frag");
+    k.loadShaderURL("halvedPattern", null, "./shaders/halvedPattern.frag");
 
     if (k.width() < 1000) {
         store.set(cameraZoomValueAtom, 0.5);
@@ -84,146 +124,56 @@ export default async function initGame() {
             k.setCamScale(k.vec2(camZoomValue));
     });
 
-    const tiledBackground = k.add([
-        k.uvquad(k.width(), k.height()), 
-        k.shader("tiledPattern", () => ({
-            u_time: k.time() / 20,
-            u_color1: k.Color.fromHex(PALETTE.colorBeige),
-            u_color2: k.Color.fromHex(PALETTE.colorBlueLight),
-            u_speed: k.vec2(1, -1),
-            u_aspect: k.width() / k.height(),
-            u_size: 5,
+
+    k.add([
+        k.uvquad(k.width(), k.height()),
+        k.shader("halvedPattern", () => ({
+            u_color1: k.Color.fromHex(PALETTE.colorBlueDark),
+            u_color2: k.Color.fromHex(PALETTE.colorBrownDark),
         })),
-        k.pos(0, 0),
+        k.pos(0,0),
         k.fixed(),
+    ])
+
+     // this was in bg originally
+    let topLeftX = k.center().x - (PARALLAX_WIDTH*SCALE/2);
+    let topLeftY = k.center().y - (PARALLAX_HEIGHT*SCALE/2);
+
+    const mask = k.add([
+        k.pos(topLeftX, topLeftY),
+        k.rect(PARALLAX_WIDTH*SCALE, PARALLAX_HEIGHT*SCALE), // Size of the masked clipping area
+        k.mask("intersect"),
     ]);
 
-    tiledBackground.onUpdate(() => {
-        tiledBackground.width = k.width();
-        tiledBackground.height = k.height();
-        tiledBackground.uniform.u_aspect = k.width() / k.height();
+    makeBackground(k, mask);
 
-    });
-
-    makeSection(
+    makeGirlie(
         k, 
-        k.vec2(k.center().x, k.center().y - 400), 
-        generalData.section1Name, 
-        (parent) => {
-            const container = parent.add([k.pos(-805, -700), k.opacity(0)]);
-            
-            container.add([
-                k.text(generalData.header.title, { font: "ibm-bold", size: 88 }),
-                k.color(k.Color.fromHex(PALETTE.colorBrownDark)),
-                k.pos(395, 0),
-                k.opacity(0),
-            ]);
-
-            container.add([
-                k.text(generalData.header.subtitle, { font: "ibm-bold", size: 48, }),
-                k.color(k.Color.fromHex(PALETTE.colorBrownDark)),
-                k.pos(485, 100),
-                k.opacity(0),
-            ]);
-
-            const socialContainer = container.add([
-                k.pos(130, 0),
-                k.opacity(0)
-            ]);
-
-            for (const socialData of socialsData) {
-                if (socialData.name === "Email") {
-                    makeEmailIcon(
-                        k, 
-                        socialContainer, 
-                        k.vec2(socialData.pos.x, socialData.pos.y), 
-                        socialData.imageData, 
-                        socialData.subtitle, 
-                        socialData.email
-                    );
-                    continue;
-                }
-
-                makeSocialIcon(
-                    k, 
-                    socialContainer, 
-                    k.vec2(socialData.pos.x, socialData.pos.y),
-                    socialData.imageData,
-                    socialData.subtitle,
-                    socialData.link,
-                    socialData.description
-                );
-            }
-
-            makeAppear(k, container);
-            makeAppear(k, socialContainer);
-        }
+        k.vec2(k.center().add(0, (SCALE * DIST_FROM_CENTER_TO_GROUND_HEIGHT))),
+        30
     );
 
-    makeSection(
-        k, 
-        k.vec2(k.center().x - 400 , k.center().y), 
-        generalData.section2Name, 
-        (parent) => {
-            const container = k.add([
-                k.opacity(0), 
-                k.pos(parent.pos.x - 300, parent.pos.y)
-            ]);
-            
-            for (const skillData of skillsData) {
-                makeSkillIcon(
-                    k, 
-                    container, 
-                    k.vec2(skillData.pos.x, skillData.pos.y), 
-                    skillData.logoData, 
-                    skillData.name
-                );
-            }
+    // add a random amount in X ?
 
-            makeAppear(k, container);
-        }
-    );
+    let lb1 = makeLightbulb(
+        k,
+        mask,
+        k.vec2(
+            ((PARALLAX_WIDTH * SCALE) / 2), 
+            ((PARALLAX_HEIGHT * SCALE) / 2) + 150
+        ),
+    )
+    lb1.id = "about-me";
+    attachToScroll(lb1, GROUND_SPEED);
 
-    makeSection(
-        k, 
-        k.vec2(k.center().x + 400 , k.center().y), 
-        generalData.section3Name,
-        (parent) => {
-            const container = parent.add([k.opacity(0), k.pos(0)]);
-            for (const experienceData of experiencesData) {
-                makeWorkExperienceCard(
-                    k, 
-                    container, 
-                    k.vec2(experienceData.pos.x, experienceData.pos.y),
-                    experienceData.cardHeight,
-                    experienceData.roleData
-                );
-            }
+    lb1.onCollide("girlie", () => {
+        lb1.play("lighting");
+        lb1.isOn = true;
+    })
 
-            makeAppear(k, container);
-        }
-    );
-
-    makeSection(
-        k, 
-        k.vec2(k.center().x, k.center().y + 400), 
-        generalData.section4Name, 
-        (parent) => {
-            const container = parent.add([k.opacity(0), k.pos(0)]);
-            for (const project of projectsData) {
-                makeProjectCard(
-                    k,
-                    container,
-                    k.vec2(project.pos.x, project.pos.y),
-                    project.data,
-                    project.thumbnail
-                );
-            }
-
-            makeAppear(k, container);
-        }
-    );
-
-    makePlayer(k, k.vec2(k.center()), 700);
+    if (lb1.isOn) {
+        lb1.play("on");
+        lb1.stop();
+    }
 
 }

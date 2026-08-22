@@ -13,27 +13,24 @@ export default function makePlayer(k, posVec2, speed) {
         {
             direction: k.vec2(0,0),
             directionName: "walk-down",
-        }
+        },
     ]);
 
     // TODO player controls, etc
     // these controls are very mouse/touch specific
-    let isMouseDown = false;
+    let isTouchMotion = false, isKeyMotion = false;
     const game = document.getElementById("game");
     game.addEventListener("focusout", () => {
-        isMouseDown = false;
-    });
-    game.addEventListener("mousedown", () => {
-        isMouseDown = true;
-    });
-    game.addEventListener("mouseup", () => {
-        isMouseDown = false;
+        isTouchMotion = false;
+        isKeyMotion = false;
     });
     game.addEventListener("touchstart", () => {
-        isMouseDown = true;
+        isTouchMotion = true;
+        isKeyMotion = false;
     });
     game.addEventListener("touchend", () => {
-        isMouseDown = false;
+        isTouchMotion = false;
+        isKeyMotion = false;
     });
 
     player.onUpdate(() => {
@@ -53,8 +50,37 @@ export default function makePlayer(k, posVec2, speed) {
         player.direction = k.vec2(0,0);
         const worldMousePos = k.toWorld(k.mousePos());
 
-        if (isMouseDown) {
+        if (isTouchMotion) {
             player.direction = worldMousePos.sub(player.pos).unit();
+        }
+    
+        const up = k.isKeyDown("up");
+        const down = k.isKeyDown("down");
+        const left = k.isKeyDown("left");
+        const right = k.isKeyDown("right");
+
+        if (up || down || left || right) {
+            let x_new = 0, y_new = 0;
+            // const up    = k.isKeyDown("up");
+            // const down  = k.isKeyDown("down");
+            // const left  = k.isKeyDown("left");
+            // const right = k.isKeyDown("right");
+
+            if      (up && left)  { x_new = -0.5; y_new = -0.7; player.directionName = "walk-left-up"; }
+            else if (up && right) { x_new =  0.5; y_new = -0.7; player.directionName = "walk-right-up"; }
+            else if (down && left)  { x_new = -0.5; y_new =  0.7; player.directionName = "walk-left-down"; }
+            else if (down && right) { x_new =  0.5; y_new =  0.7; player.directionName = "walk-right-down"; }
+            else if (up)    { x_new = 0.01; y_new = -0.9; player.directionName = "walk-up"; }
+            else if (down)  { x_new = 0.01; y_new =  0.9; player.directionName = "walk-down"; }
+            else if (left)  { x_new = -0.5; y_new =  0; player.directionName = "walk-left"; }
+            else if (right) { x_new =  0.5; y_new =  0; player.directionName = "walk-down"; }
+
+            player.direction = k.vec2(x_new, y_new);
+        }
+
+        else {
+            player.play(`${player.directionName}-idle`);
+            return;
         }
 
         if (player.direction.eq(k.vec2(0,0)) && !player.getCurAnim().name.includes("idle")) {
@@ -77,10 +103,10 @@ export default function makePlayer(k, posVec2, speed) {
         )
             player.directionName = "walk-left";
 
-        if (player.direction.x < 0 && player.direction.y < -0.8)
+        if (player.direction.x <= 0 && player.direction.y < -0.8)
             player.directionName = "walk-up";
 
-        if (player.direction.x < 0 && player.direction.y > 0.8)
+        if (player.direction.x <= 0 && player.direction.y > 0.8)
             player.directionName = "walk-down";
 
         if (
