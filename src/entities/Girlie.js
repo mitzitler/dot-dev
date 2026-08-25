@@ -32,27 +32,60 @@ export default function makeGirlie(k, posVec2, speed) {
 
     girlie.onUpdate(() => {
 
+        const up = k.isKeyDown("up");
         const left = k.isKeyDown("left");
         const right = k.isKeyDown("right");
-        const space = k.isKeyDown("space");
-        let isLifting = space && (left || right);
+        const down = k.isKeyDown("down");
+        const shift = k.isKeyDown("shift");
+        let isLifting = down && (left || right);
+        let isRunning = shift && (left || right);
         let anim;
 
         if (isLifting) {
             girlie.direction = left ? "left" : "right";
             anim = `lift-${girlie.direction}`;
         }
+        if (up && left) {
+            girlie.direction = "left";
+            anim = `jump-${girlie.direction}`;
+            girlie.move(-speed/2, 0);
+            scroll(k, girlie.direction);
+        }
+        if (up && right) {
+            girlie.direction = "right";
+            anim = `jump-${girlie.direction}`;
+            girlie.move(speed/2, 0);
+            scroll(k, girlie.direction);
+        }
         else if (left) {
             girlie.direction = "left";
-            anim = `walk-${girlie.direction}`;
-            girlie.move(-speed, 0);
-            scroll(k, girlie.direction);
+            if (isRunning) {
+                anim = `run-${girlie.direction}`;
+                girlie.move(-speed, 0);
+                scroll(k, girlie.direction, false);
+            }
+            else {
+                anim = `walk-${girlie.direction}`;
+                girlie.move(-speed, 0);
+                scroll(k, girlie.direction);
+            }
         }
         else if (right) {
             girlie.direction = "right";
-            anim = `walk-${girlie.direction}`;
-            girlie.move(speed, 0);
-            scroll(k, girlie.direction);
+            if (isRunning) {
+                anim = `run-${girlie.direction}`;
+                girlie.move(speed, 0);
+                scroll(k, girlie.direction, false);
+            }
+            else {
+                anim = `walk-${girlie.direction}`;
+                girlie.move(speed, 0);
+                scroll(k, girlie.direction);
+            }
+        }
+        else if (up) {
+            anim = `jump-${girlie.direction}`;
+            // girlie.move(0, speed);
         }
         else {
             anim = `idle-${girlie.direction}`;

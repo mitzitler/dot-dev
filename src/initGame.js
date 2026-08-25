@@ -1,11 +1,4 @@
-import makeEmailIcon from "./components/EmailIcon";
-import makeSkillIcon from "./components/SkillIcon";
-import makeSection from "./components/Section";
-import makeSocialIcon from "./components/SocialIcon";
-import makeWorkExperienceCard from "./components/WorkExperienceCard";
-import makeProjectCard from "./components/ProjectCard";
 import { PALETTE, PARALLAX_HEIGHT, PARALLAX_WIDTH, SCALE, DIST_FROM_CENTER_TO_GROUND_HEIGHT } from "./constants";
-import makePlayer from "./entities/Player";
 import makeKaplayCtx from "./kaplayCtx";
 import { store } from "./store";
 import { cameraZoomValueAtom } from "./store";
@@ -13,14 +6,21 @@ import { makeAppear } from "./utils";
 import makeGirlie from "./entities/Girlie";
 import makeBackground, { GROUND_SPEED, attachToScroll } from "./entities/Bg";
 import makeLightbulb from "./entities/Lightbulb";
+import makeTooltipBox from "./components/TooltipBox";
+
+import {GIRLIE_IDLE_RIGHT_FRAMES, GIRLIE_IDLE_LEFT_FRAMES, GIRLIE_WALK_RIGHT_FRAMES, 
+    GIRLIE_WALK_LEFT_FRAMES, GIRLIE_RUN_RIGHT_FRAMES, GIRLIE_RUN_LEFT_FRAMES, 
+    GIRLIE_JUMP_RIGHT_FRAMES, GIRLIE_JUMP_LEFT_FRAMES, GIRLIE_LIFT_RIGHT_FRAMES, GIRLIE_LIFT_LEFT_FRAMES
+} from "./anims";
 
 export default async function initGame() {
 
-    const generalData = await( await fetch('./configs/generalData.json')).json();
-    const socialsData = await( await fetch('./configs/socialsData.json')).json();
-    const skillsData = await( await fetch('./configs/skillsData.json')).json();
-    const experiencesData = await( await fetch('./configs/experiencesData.json')).json();
-    const projectsData = await( await fetch('./configs/projectsData.json')).json();
+    // const generalData = await( await fetch('./configs/generalData.json')).json();
+    // const socialsData = await( await fetch('./configs/socialsData.json')).json();
+    // const skillsData = await( await fetch('./configs/skillsData.json')).json();
+    // const experiencesData = await( await fetch('./configs/experiencesData.json')).json();
+    // const projectsData = await( await fetch('./configs/projectsData.json')).json();
+    const toolboxData = await( await fetch('./configs/toolBoxTexts.json')).json();
     
     const k = makeKaplayCtx();
     k.loadSprite("bg-sky", "./sprites/bg-sky.png");
@@ -34,80 +34,42 @@ export default async function initGame() {
     k.loadSprite("bg-frame", "./sprites/bg-frame.png");
 
 
-    k.loadSprite("girlie", "./sprites/purple_girlie.png",
+    k.loadSprite("girlie", "./sprites/purple_girlie2.png",
         {
-        sliceX: 7,
-        sliceY: 6,
+        sliceX: 9,
+        sliceY: 8,
         anims: {
-            "idle-right": {from: 0, to: 5, loop: true},
-            "idle-left": {from: 6, to: 11, loop: true},            
-            "walk-right": {frames: [0, 12, 13, 14, 15, 16, 17, 18], loop: true, speed: 12 },
-            "walk-left": {frames: [6, 19, 20, 21, 22, 23, 24, 25], loop: true, speed: 12 },
-            "lift-right": {frames: [26, 27, 28, 29, 30, 31, 32, 0], loop: false},
-            "lift-left": {frames: [33, 34, 35, 36, 37, 38, 39, 40, 6], loop: false}, 
+            "idle-right": {frames: GIRLIE_IDLE_RIGHT_FRAMES, loop: true},
+            "idle-left": {frames: GIRLIE_IDLE_LEFT_FRAMES, loop: true},            
+            "walk-right": {frames: GIRLIE_WALK_RIGHT_FRAMES, loop: true, speed: 12 },
+            "walk-left": {frames: GIRLIE_WALK_LEFT_FRAMES, loop: true, speed: 12 },
+            "run-right": {frames: GIRLIE_RUN_RIGHT_FRAMES, loop: true, speed: 24 },
+            "run-left": {frames: GIRLIE_RUN_LEFT_FRAMES, loop: true, speed: 24 },
+            "jump-right": {frames: GIRLIE_JUMP_RIGHT_FRAMES, loop: false},
+            "jump-left": {frames: GIRLIE_JUMP_LEFT_FRAMES, loop: false},    
+            "lift-right": {frames: GIRLIE_LIFT_RIGHT_FRAMES, loop: false},
+            "lift-left": {frames: GIRLIE_LIFT_LEFT_FRAMES, loop: false}, 
         }
     });
-    k.loadSprite("lightbulb", "./sprites/lightbulb.png", 
+    k.loadSprite("lightbulb", "./sprites/lightbulb-updated.png", 
         {
         sliceX: 3,
         sliceY: 2,
         anims: {
             "off": 0,
             "lighting": {from: 0, to: 5, loop: false, speed: 1.8},
-            "on": 5,
+            "on": {frames: [4, 4, 4, 4, 4, 4, 4, 4, 5, 5], loop: true, speed: 0.3},
         }
-    });
-    k.loadSprite("player", "./sprites/player.png", 
-        {
-        
-        // because this is a sheet with frames, we get to have addt'l code to specify those
-        sliceX: 4, // 4 frames per row
-        sliceY: 8, // 8 frames per col
-        anims: {
-            "walk-down-idle": 0,
-            "walk-down": {from: 0, to: 3, loop: true },
-            "walk-left-down": {from: 4, to: 7, loop: true},
-            "walk-left-down-idle": 4,
-            "walk-left": {from: 8, to: 11, loop: true},
-            "walk-left-idle": 8, 
-            "walk-left-up": {from: 12, to: 15, loop: true},
-            "walk-left-up-idle": 12,
-            "walk-up": {from: 16, to: 19, loop: true},
-            "walk-up-idle": 16,
-            "walk-right-up": {from: 20, to: 23, loop: true},
-            "walk-right-up-idle": 20,
-            "walk-right": {from: 24, to: 27, loop: true },
-            "walk-right-idle": 24,
-            "walk-right-down": {from: 28, to: 31, loop: true},
-            "walk-right-down-idle": 28,
-        }
-
     });
     // fonts
-    k.loadFont("ibm-regular", "./fonts/IBMPlexSans-Regular.ttf");
-    k.loadFont("ibm-bold", "./fonts/IBMPlexSans-Bold.ttf");
-    // logos
-    k.loadSprite("github-logo", "./logos/github-logo.png");
-    k.loadSprite("linkedin-logo", "./logos/linkedin-logo.png");
-    k.loadSprite("youtube-logo", "./logos/youtube-logo.png");
-    k.loadSprite("x-logo", "./logos/x-logo.png");
-    k.loadSprite("substack-logo", "./logos/substack-logo.png");
-    k.loadSprite("js-logo", "./logos/js-logo.png");
-    k.loadSprite("ts-logo", "./logos/ts-logo.png");
-    k.loadSprite("react-logo", "./logos/react-logo.png");
-    k.loadSprite("nextjs-logo", "./logos/nextjs-logo.png");
-    k.loadSprite("postgres-logo", "./logos/postgres-logo.png");
-    k.loadSprite("html-logo", "./logos/html-logo.png");
-    k.loadSprite("css-logo", "./logos/css-logo.png");
-    k.loadSprite("tailwind-logo", "./logos/tailwind-logo.png");
-    k.loadSprite("python-logo", "./logos/python-logo.png");
-    k.loadSprite("email-logo", "./logos/email-logo.png");
-    // projects
-    k.loadSprite("sonic-js", "./projects/sonic-js.png");
-    k.loadSprite("kirby-ts", "./projects/kirby-ts.png");
-    k.loadSprite("platformer-js", "./projects/platformer-js.png");
-    // shader - look up diff between fragment shaders and vertex shaders
-    k.loadShaderURL("tiledPattern", null, "./shaders/tiledPattern.frag");
+    k.loadFont("wellbutrin", "./fonts/Welbut__.ttf");
+    // controls
+    k.loadSprite("up_btn", "./sprites/up_btn.png", {sliceX: 1, sliceY: 2, anims: {"resting": {frames: 0}, "pressed": {frames: 1}}});
+    k.loadSprite("left_btn", "./sprites/left_btn.png", {sliceX: 1, sliceY: 2, anims: {"resting": {frames: 0}, "pressed": {frames: 1}}});
+    k.loadSprite("right_btn", "./sprites/right_btn.png", {sliceX: 1, sliceY: 2, anims: {"resting": {frames: 0}, "pressed": {frames: 1}}});
+    k.loadSprite("down_btn", "./sprites/down_btn.png", {sliceX: 1, sliceY: 2, anims: {"resting": {frames: 0}, "pressed": {frames: 1}}});
+    k.loadSprite("leftleft_btn", "./sprites/leftleft_btn.png", {sliceX: 1, sliceY: 2, anims: {"resting": {frames: 0}, "pressed": {frames: 1}}});
+    k.loadSprite("rightright_btn", "./sprites/rightright_btn.png", {sliceX: 1, sliceY: 2, anims: {"resting": {frames: 0}, "pressed": {frames: 1}}});
     k.loadShaderURL("halvedPattern", null, "./shaders/halvedPattern.frag");
 
     if (k.width() < 1000) {
@@ -155,20 +117,30 @@ export default async function initGame() {
 
     // add a random amount in X ?
 
+    // this needs to be quarantined better
     let lb1 = makeLightbulb(
         k,
         mask,
         k.vec2(
-            ((PARALLAX_WIDTH * SCALE) / 2), 
-            ((PARALLAX_HEIGHT * SCALE) / 2) + 150
+            ((PARALLAX_WIDTH * SCALE) / 2) + 200, 
+            ((PARALLAX_HEIGHT * SCALE) / 2) + 100
         ),
     )
     lb1.id = "about-me";
     attachToScroll(lb1, GROUND_SPEED);
 
     lb1.onCollide("girlie", () => {
-        lb1.play("lighting");
+        if (lb1.isOn) return;
         lb1.isOn = true;
+
+        lb1.play("lighting");
+        lb1.onAnimEnd(anim => { if (anim === "lighting") {
+            lb1.play("on");
+            lb1.stop();
+        } }) 
+
+        const topCenter = k.vec2(0, -lb1.height / 2);
+        makeTooltipBox(k, lb1, topCenter, toolboxData[0])
     })
 
     if (lb1.isOn) {

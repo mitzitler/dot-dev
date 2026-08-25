@@ -1,0 +1,13 @@
+[
+    {
+        "id": 1,
+        "title": "About Me",
+        "text": "I am an engineer that leads with creativity! My name is Mitzi, welcome to the website. Try using the arrow keys to explore - everything you see is hand pixeled and wired up with Kaplay and React!"
+    },
+    {
+        "id": 2,
+        "title": "Contacts",
+        "text": "Reach me by email, phone, linkedin, etc!"
+    }
+
+]
