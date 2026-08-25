@@ -1,5 +1,5 @@
 import { PARALLAX_HEIGHT, PARALLAX_WIDTH, SCALE} from "../constants.js";
-export const GROUND_SPEED = -12;
+export const GROUND_SPEED = -16;
 let layers = null;
 let scrollingItems = [];
 
@@ -85,13 +85,16 @@ export function attachToScroll(gameObj, speed = GROUND_SPEED) {
     scrollingItems.push({ obj: gameObj, speed });
 }
 
-export function scroll(k, direction) {
+export function scroll(k, direction, walk = true) {
 
     const tileWidth = PARALLAX_WIDTH * SCALE;
+    let speedModifier = 5
+    if (!walk) speedModifier = 20;
 
     for (const layer of layers) {
         const last = layer.parts.length - 1;
-        const velocity = direction === "right" ? layer.speed*5 : -layer.speed*5;
+        let velocity = direction === "right" ? layer.speed : -layer.speed;
+        velocity *= speedModifier;
 
         if (direction === "right" && layer.parts[0].pos.x < -2 * tileWidth) {
             // leftmost panel has fully scrolled out of view; recycle it to become the new rightmost
@@ -112,7 +115,8 @@ export function scroll(k, direction) {
     }
 
     for (const item of scrollingItems) {
-        const velocity = direction === "right" ? item.speed*5 : -item.speed*5;
+        let velocity = direction === "right" ? item.speed : -item.speed;
+        velocity *= speedModifier;
         item.obj.move(velocity, 0);
     }
 }
