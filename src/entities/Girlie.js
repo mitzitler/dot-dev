@@ -1,11 +1,11 @@
 // things to import from const: gravity
-import { PARALLAX_HEIGHT, PARALLAX_WIDTH, SCALE, DIST_FROM_CENTER_TO_GROUND_HEIGHT} from "../constants.js";
+import { SCALE } from "../constants.js";
 import { scroll } from "./Bg.js";
+import { selectedDirectionBtn, store } from "../store";
 
 export default function makeGirlie(k, posVec2, speed) {
     // this has k.anchor(), k.area(), k.body(), k.pos(), k.sprite - with default anim
     const idle = "idle-right";
-
     const girlie = k.add([
         k.sprite("girlie", {anim: idle}),
         k.scale(SCALE),
@@ -24,21 +24,33 @@ export default function makeGirlie(k, posVec2, speed) {
     ]);
 
     // controls
-    let isTouch = false, isKey = false, wasLifting = false;
-    const game = document.getElementById("game");
-    game.addEventListener("focusout", () => isTouch = false );
-    game.addEventListener("touchstart", () => isTouch = true );
-    game.addEventListener("touchend", () => isTouch = false );
+    let wasLifting = false;
 
     girlie.onUpdate(() => {
 
-        const up = k.isKeyDown("up");
-        const left = k.isKeyDown("left");
-        const right = k.isKeyDown("right");
-        const down = k.isKeyDown("down");
-        const shift = k.isKeyDown("shift");
-        let isLifting = down && (left || right);
-        let isRunning = shift && (left || right);
+        // Input comes from EITHER the keyboard OR the on-screen (touch) buttons.
+        // The buttons publish the pressed direction to selectedDirectionBtn; translate
+        // it back into the same flags the keyboard produces so ONE movement block
+        // below handles both sources.
+        let up, left, right, down, shift;
+
+        const btn = store.get(selectedDirectionBtn); // "" | "leftleft" | "left" | "up" | "right" | "rightright"
+        if (btn !== "") {
+            left  = btn === "left"  || btn === "leftleft";
+            right = btn === "right" || btn === "rightright";
+            up    = btn === "up";
+            down  = false;
+            shift = btn === "leftleft" || btn === "rightright"; // double-arrow = run
+        } else {
+            up    = k.isKeyDown("up");
+            left  = k.isKeyDown("left");
+            right = k.isKeyDown("right");
+            down  = k.isKeyDown("down");
+            shift = k.isKeyDown("shift");
+        }
+
+        const isLifting = down && (left || right);
+        const isRunning = shift && (left || right);
         let anim;
 
         if (isLifting) {
@@ -92,7 +104,7 @@ export default function makeGirlie(k, posVec2, speed) {
         }
 
         const justStartedLifting = isLifting && !wasLifting;
-        
+
         if (justStartedLifting || (!isLifting && girlie.curAnim() !== anim)) {
             girlie.play(anim);
         }

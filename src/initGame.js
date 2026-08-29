@@ -7,6 +7,7 @@ import makeGirlie from "./entities/Girlie";
 import makeBackground, { GROUND_SPEED, attachToScroll } from "./entities/Bg";
 import makeLightbulb from "./entities/Lightbulb";
 import makeTooltipBox from "./components/TooltipBox";
+import makeControls from "./components/Controls";
 
 import {GIRLIE_IDLE_RIGHT_FRAMES, GIRLIE_IDLE_LEFT_FRAMES, GIRLIE_WALK_RIGHT_FRAMES, 
     GIRLIE_WALK_LEFT_FRAMES, GIRLIE_RUN_RIGHT_FRAMES, GIRLIE_RUN_LEFT_FRAMES, 
@@ -36,8 +37,8 @@ export default async function initGame() {
 
     k.loadSprite("girlie", "./sprites/purple_girlie2.png",
         {
-        sliceX: 9,
-        sliceY: 8,
+        sliceX: 10,
+        sliceY: 9,
         anims: {
             "idle-right": {frames: GIRLIE_IDLE_RIGHT_FRAMES, loop: true},
             "idle-left": {frames: GIRLIE_IDLE_LEFT_FRAMES, loop: true},            
@@ -63,14 +64,7 @@ export default async function initGame() {
     });
     // fonts
     k.loadFont("wellbutrin", "./fonts/Welbut__.ttf");
-    // controls
-    k.loadSprite("up_btn", "./sprites/up_btn.png", {sliceX: 1, sliceY: 2, anims: {"resting": {frames: 0}, "pressed": {frames: 1}}});
-    k.loadSprite("left_btn", "./sprites/left_btn.png", {sliceX: 1, sliceY: 2, anims: {"resting": {frames: 0}, "pressed": {frames: 1}}});
-    k.loadSprite("right_btn", "./sprites/right_btn.png", {sliceX: 1, sliceY: 2, anims: {"resting": {frames: 0}, "pressed": {frames: 1}}});
-    k.loadSprite("down_btn", "./sprites/down_btn.png", {sliceX: 1, sliceY: 2, anims: {"resting": {frames: 0}, "pressed": {frames: 1}}});
-    k.loadSprite("leftleft_btn", "./sprites/leftleft_btn.png", {sliceX: 1, sliceY: 2, anims: {"resting": {frames: 0}, "pressed": {frames: 1}}});
-    k.loadSprite("rightright_btn", "./sprites/rightright_btn.png", {sliceX: 1, sliceY: 2, anims: {"resting": {frames: 0}, "pressed": {frames: 1}}});
-    k.loadShaderURL("halvedPattern", null, "./shaders/halvedPattern.frag");
+        k.loadShaderURL("halvedPattern", null, "./shaders/halvedPattern.frag");
 
     if (k.width() < 1000) {
         store.set(cameraZoomValueAtom, 0.5);
@@ -90,16 +84,26 @@ export default async function initGame() {
     k.add([
         k.uvquad(k.width(), k.height()),
         k.shader("halvedPattern", () => ({
-            u_color1: k.Color.fromHex(PALETTE.colorBlueDark),
+            u_color1: k.Color.fromHex(PALETTE.colorBeige),
             u_color2: k.Color.fromHex(PALETTE.colorBrownDark),
         })),
         k.pos(0,0),
         k.fixed(),
     ])
 
+
      // this was in bg originally
     let topLeftX = k.center().x - (PARALLAX_WIDTH*SCALE/2);
     let topLeftY = k.center().y - (PARALLAX_HEIGHT*SCALE/2);
+
+
+    /*
+    if (k.isTouchscreen()) {
+        k.add controls
+    }
+    */
+
+
 
     const mask = k.add([
         k.pos(topLeftX, topLeftY),
@@ -109,6 +113,8 @@ export default async function initGame() {
 
     makeBackground(k, mask);
 
+    if (k.isTouchscreen()) makeControls(k, k.vec2(k.center().x, topLeftY+(PARALLAX_HEIGHT*SCALE)));
+
     makeGirlie(
         k, 
         k.vec2(k.center().add(0, (SCALE * DIST_FROM_CENTER_TO_GROUND_HEIGHT))),
@@ -116,6 +122,11 @@ export default async function initGame() {
     );
 
     // add a random amount in X ?
+
+    // add this to helpers
+    const delay = (durationMs) => {
+        return new Promise(resolve => setTimeout(resolve, durationMs));
+    }
 
     // this needs to be quarantined better
     let lb1 = makeLightbulb(
@@ -140,7 +151,7 @@ export default async function initGame() {
         } }) 
 
         const topCenter = k.vec2(0, -lb1.height / 2);
-        makeTooltipBox(k, lb1, topCenter, toolboxData[0])
+        makeTooltipBox(k, lb1, topCenter, toolboxData[0], 2.5)
     })
 
     if (lb1.isOn) {

@@ -74,11 +74,11 @@ export default function makeBackground(k, mask) {
 
     layers = makeLayers(k, mask);
 
-    k.add([
-        k.sprite("bg-frame"), 
-        k.scale(SCALE),
-        k.pos(mask.pos.x, mask.pos.y) // 0,0 is the top left corner FWIW
-    ]);
+    // k.add([
+    //     k.sprite("bg-frame"), 
+    //     k.scale(SCALE),
+    //     k.pos(mask.pos.x, mask.pos.y) // 0,0 is the top left corner FWIW
+    // ]);
 };
 
 export function attachToScroll(gameObj, speed = GROUND_SPEED) {
