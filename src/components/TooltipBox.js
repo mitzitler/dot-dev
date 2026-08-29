@@ -1,8 +1,16 @@
 import { PALETTE, SCALE, TOOLBOX_WIDTH } from "../constants";
 
+const delay = (durationMs) => {
+        return new Promise(resolve => setTimeout(resolve, durationMs));
+    }
+
 // parent is the item that triggers it
 // posVec2 is the center bottom point of the box
-export default function makeTooltipBox(k, parent, posVec2, data) {
+export default async function makeTooltipBox(k, parent, posVec2, data, durationS) {
+
+
+    await delay(durationS*1000);
+
     // on colide, this function will fire...
     // the vec2 it is passed is the top centermost of 
     const centerPosX = posVec2.x - (TOOLBOX_WIDTH*SCALE/2);
