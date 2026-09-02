@@ -60,25 +60,25 @@ export default function makeGirlie(k, posVec2, speed) {
         if (up && left) {
             girlie.direction = "left";
             anim = `jump-${girlie.direction}`;
-            girlie.move(-speed/2, 0);
+            // girlie.move(-speed/2, 0);
             scroll(k, girlie.direction);
         }
         if (up && right) {
             girlie.direction = "right";
             anim = `jump-${girlie.direction}`;
-            girlie.move(speed/2, 0);
+            // girlie.move(speed/2, 0);
             scroll(k, girlie.direction);
         }
         else if (left) {
             girlie.direction = "left";
             if (isRunning) {
                 anim = `run-${girlie.direction}`;
-                girlie.move(-speed, 0);
+                // girlie.move(-speed, 0);
                 scroll(k, girlie.direction, false);
             }
             else {
                 anim = `walk-${girlie.direction}`;
-                girlie.move(-speed, 0);
+                // girlie.move(-speed, 0);
                 scroll(k, girlie.direction);
             }
         }
@@ -86,12 +86,12 @@ export default function makeGirlie(k, posVec2, speed) {
             girlie.direction = "right";
             if (isRunning) {
                 anim = `run-${girlie.direction}`;
-                girlie.move(speed, 0);
+                // girlie.move(speed, 0);
                 scroll(k, girlie.direction, false);
             }
             else {
                 anim = `walk-${girlie.direction}`;
-                girlie.move(speed, 0);
+                // girlie.move(speed, 0);
                 scroll(k, girlie.direction);
             }
         }
