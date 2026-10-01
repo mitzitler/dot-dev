@@ -1,17 +1,18 @@
 import { PALETTE, PARALLAX_HEIGHT, PARALLAX_WIDTH, SCALE, DIST_FROM_CENTER_TO_GROUND_HEIGHT } from "./constants";
 import makeKaplayCtx from "./kaplayCtx";
-import { store } from "./store";
-import { cameraZoomValueAtom } from "./store";
 import { makeAppear } from "./utils";
 import makeGirlie from "./entities/Girlie";
 import makeBackground, { GROUND_SPEED, attachToScroll } from "./entities/Bg";
 import makeLightbulb from "./entities/Lightbulb";
+import makeFlower from "./entities/Flower";
 import makeTooltipBox from "./components/TooltipBox";
 import makeControls from "./components/Controls";
+import startLoadSequence from "./helpers/loadSequence";
 
 import {GIRLIE_IDLE_RIGHT_FRAMES, GIRLIE_IDLE_LEFT_FRAMES, GIRLIE_WALK_RIGHT_FRAMES, 
     GIRLIE_WALK_LEFT_FRAMES, GIRLIE_RUN_RIGHT_FRAMES, GIRLIE_RUN_LEFT_FRAMES, 
-    GIRLIE_JUMP_RIGHT_FRAMES, GIRLIE_JUMP_LEFT_FRAMES, GIRLIE_LIFT_RIGHT_FRAMES, GIRLIE_LIFT_LEFT_FRAMES
+    GIRLIE_JUMP_RIGHT_FRAMES, GIRLIE_JUMP_LEFT_FRAMES, GIRLIE_LIFT_RIGHT_FRAMES, 
+    GIRLIE_LIFT_LEFT_FRAMES, GIRLIE_WATER_RIGHT_FRAMES, GIRLIE_WATER_LEFT_FRAMES
 } from "./anims";
 
 export default async function initGame() {
@@ -24,6 +25,8 @@ export default async function initGame() {
     const toolboxData = await( await fetch('./configs/toolBoxTexts.json')).json();
     
     const k = makeKaplayCtx();
+    k.loadSprite("nametag", "./sprites/nametag.png");
+
     k.loadSprite("bg-sky", "./sprites/bg-sky.png");
     k.loadSprite("bg-clouds-back", "./sprites/bg-clouds-back.png");
     k.loadSprite("bg-clouds-front", "./sprites/bg-clouds-front.png");
@@ -33,7 +36,6 @@ export default async function initGame() {
     k.loadSprite("bg-trees-front", "./sprites/bg-trees-front.png");
     k.loadSprite("bg-ground", "./sprites/bg-ground.png");
     k.loadSprite("bg-frame", "./sprites/bg-frame.png");
-
 
     k.loadSprite("girlie", "./sprites/purple_girlie2.png",
         {
@@ -47,7 +49,11 @@ export default async function initGame() {
             "run-right": {frames: GIRLIE_RUN_RIGHT_FRAMES, loop: true, speed: 24 },
             "run-left": {frames: GIRLIE_RUN_LEFT_FRAMES, loop: true, speed: 24 },
             "jump-right": {frames: GIRLIE_JUMP_RIGHT_FRAMES, loop: false},
-            "jump-left": {frames: GIRLIE_JUMP_LEFT_FRAMES, loop: false},    
+            "jump-left": {frames: GIRLIE_JUMP_LEFT_FRAMES, loop: false}, 
+
+            "watering-right": {frames: GIRLIE_WATER_RIGHT_FRAMES, loop: false},
+            "watering-left": {frames: GIRLIE_WATER_LEFT_FRAMES, loop: false}, 
+
             "lift-right": {frames: GIRLIE_LIFT_RIGHT_FRAMES, loop: false},
             "lift-left": {frames: GIRLIE_LIFT_LEFT_FRAMES, loop: false}, 
         }
@@ -62,48 +68,37 @@ export default async function initGame() {
             "on": {frames: [4, 4, 4, 4, 4, 4, 4, 4, 5, 5], loop: true, speed: 0.3},
         }
     });
+    k.loadSprite("flower", "./sprites/flower.png",
+        {
+        sliceX:4, 
+        sliceY: 4,
+        anims: {
+            "rest": 0,
+            "blooming": {from: 0, to: 15, loop: false, speed: 1.5},
+            "bloomed": 15,
+        }
+        }
+
+    )
     // fonts
     k.loadFont("wellbutrin", "./fonts/Welbut__.ttf");
         k.loadShaderURL("halvedPattern", null, "./shaders/halvedPattern.frag");
 
-    if (k.width() < 1000) {
-        store.set(cameraZoomValueAtom, 0.5);
-        k.setCamScale(k.vec2(0.5));
-    } else {
-        store.set(cameraZoomValueAtom, 0.8);
-        k.setCamScale(k.vec2(0.8));
-    }
-
-    k.onUpdate(() => {
-        const camZoomValue = store.get(cameraZoomValueAtom);
-        if (camZoomValue !== k.getCamScale())
-            k.setCamScale(k.vec2(camZoomValue));
-    });
-
-
+    // permanent 50/50 background, sits behind the mask/parallax scene forever
     k.add([
         k.uvquad(k.width(), k.height()),
         k.shader("halvedPattern", () => ({
             u_color1: k.Color.fromHex(PALETTE.colorBeige),
             u_color2: k.Color.fromHex(PALETTE.colorBrownDark),
+            u_progress: 0,
         })),
         k.pos(0,0),
         k.fixed(),
     ])
 
-
      // this was in bg originally
     let topLeftX = k.center().x - (PARALLAX_WIDTH*SCALE/2);
     let topLeftY = k.center().y - (PARALLAX_HEIGHT*SCALE/2);
-
-
-    /*
-    if (k.isTouchscreen()) {
-        k.add controls
-    }
-    */
-
-
 
     const mask = k.add([
         k.pos(topLeftX, topLeftY),
@@ -115,8 +110,8 @@ export default async function initGame() {
 
     if (k.isTouchscreen()) makeControls(k, k.vec2(k.center().x, topLeftY+(PARALLAX_HEIGHT*SCALE)));
 
-    makeGirlie(
-        k, 
+    let girlie = makeGirlie(
+        k,
         k.vec2(k.center().add(0, (SCALE * DIST_FROM_CENTER_TO_GROUND_HEIGHT))),
         30
     );
@@ -159,4 +154,46 @@ export default async function initGame() {
         lb1.stop();
     }
 
+
+
+    // this is the flower bit
+    let flower = makeFlower(
+        k,
+        mask,
+        k.vec2(
+            ((PARALLAX_WIDTH * SCALE) / 2) + 600, 
+            ((PARALLAX_HEIGHT * SCALE) / 2) + 375
+        )
+    )
+    attachToScroll(flower, GROUND_SPEED);
+
+    flower.onCollide("girlie", () => {
+        if (flower.isBloomed) return;
+        flower.isBloomed = true;
+
+        // girlie.play(`watering-${girlie.direction}`);
+        girlie.play("watering-right");
+        // girlie.stop();
+        flower.play("blooming");
+        flower.onAnimEnd(anim => { if (anim === "blooming") {
+            flower.play("bloomed");
+            flower.stop();
+        }})
+        // makeContactsBox
+    })
+
+    const shaderProgress = { value: 0 };
+    const shaderEntity = k.add([
+        k.uvquad(k.width(), k.height()),
+        k.shader("halvedPattern", () => ({
+            u_color1: k.Color.fromHex(PALETTE.colorBeige),
+            u_color2: k.Color.fromHex(PALETTE.colorBrownDark),
+            u_progress: shaderProgress.value,
+        })),
+        k.pos(0,0),
+        k.fixed(),
+        k.z(1000), // above girlie/lb1/flower (max 999), below the nametag (1001)
+    ])
+
+    await startLoadSequence(k, shaderEntity, shaderProgress);
 }
