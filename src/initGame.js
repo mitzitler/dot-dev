@@ -157,6 +157,13 @@ export default async function initGame() {
 
 
     // this is the flower bit
+        /*
+
+        -- the idea with the flower should be:
+        -- flower anim happens on collide, girlie watering happens on collide
+        -- nothing else happens - this is not responsible for any information delivery
+
+        
     let flower = makeFlower(
         k,
         mask,
@@ -171,16 +178,14 @@ export default async function initGame() {
         if (flower.isBloomed) return;
         flower.isBloomed = true;
 
-        // girlie.play(`watering-${girlie.direction}`);
         girlie.play("watering-right");
-        // girlie.stop();
         flower.play("blooming");
         flower.onAnimEnd(anim => { if (anim === "blooming") {
             flower.play("bloomed");
             flower.stop();
         }})
-        // makeContactsBox
     })
+        */
 
     const shaderProgress = { value: 0 };
     const shaderEntity = k.add([
