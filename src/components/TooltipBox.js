@@ -1,8 +1,11 @@
-import { PALETTE, SCALE, TOOLBOX_WIDTH } from "../constants";
+import { PALETTE, SCALE_WIDE, SCALE_MOBILE, TOOLBOX_WIDTH } from "../constants";
+import { isMobile, store } from "../store";
 
 const delay = (durationMs) => {
         return new Promise(resolve => setTimeout(resolve, durationMs));
     }
+
+let SCALE = SCALE_WIDE;
 
 // parent is the item that triggers it
 // posVec2 is the center bottom point of the box
@@ -10,6 +13,13 @@ export default async function makeTooltipBox(k, parent, posVec2, data, durationS
 
 
     await delay(durationS*1000);
+
+    if (store.get(isMobile, true)) {
+        SCALE = SCALE_MOBILE;
+    }
+    else {
+        SCALE = SCALE_WIDE;
+    }
 
     // on colide, this function will fire...
     // the vec2 it is passed is the top centermost of 

@@ -15,6 +15,8 @@ export const chosenProjectDataAtom = atom({
 
 export const selectedDirectionBtn = atom("");
 
+// is this the best way to do this?
+export const isMobile = atom(false);
 
 export const isFlowerBloomed = atom(false);
 

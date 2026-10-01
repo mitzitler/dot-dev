@@ -1,10 +1,11 @@
-import { PALETTE, PARALLAX_HEIGHT, PARALLAX_WIDTH, SCALE, DIST_FROM_CENTER_TO_GROUND_HEIGHT } from "./constants";
+import { PALETTE, PARALLAX_HEIGHT, PARALLAX_WIDTH, SCALE_WIDE, SCALE_MOBILE, DIST_FROM_CENTER_TO_GROUND_HEIGHT } from "./constants";
+import { isMobile, store } from "./store.js";
 import makeKaplayCtx from "./kaplayCtx";
 import { makeAppear } from "./utils";
 import makeGirlie from "./entities/Girlie";
 import makeBackground, { GROUND_SPEED, attachToScroll } from "./entities/Bg";
 import makeLightbulb from "./entities/Lightbulb";
-import makeFlower from "./entities/Flower";
+// import makeFlower from "./entities/Flower";
 import makeTooltipBox from "./components/TooltipBox";
 import makeControls from "./components/Controls";
 import startLoadSequence from "./helpers/loadSequence";
@@ -14,6 +15,8 @@ import {GIRLIE_IDLE_RIGHT_FRAMES, GIRLIE_IDLE_LEFT_FRAMES, GIRLIE_WALK_RIGHT_FRA
     GIRLIE_JUMP_RIGHT_FRAMES, GIRLIE_JUMP_LEFT_FRAMES, GIRLIE_LIFT_RIGHT_FRAMES, 
     GIRLIE_LIFT_LEFT_FRAMES, GIRLIE_WATER_RIGHT_FRAMES, GIRLIE_WATER_LEFT_FRAMES
 } from "./anims";
+
+let SCALE = SCALE_WIDE;
 
 export default async function initGame() {
 
@@ -82,7 +85,7 @@ export default async function initGame() {
     )
     // fonts
     k.loadFont("wellbutrin", "./fonts/Welbut__.ttf");
-        k.loadShaderURL("halvedPattern", null, "./shaders/halvedPattern.frag");
+    k.loadShaderURL("halvedPattern", null, "./shaders/halvedPattern.frag");
 
     // permanent 50/50 background, sits behind the mask/parallax scene forever
     k.add([
@@ -96,6 +99,14 @@ export default async function initGame() {
         k.fixed(),
     ])
 
+    if (k.isTouchscreen()) {
+        store.set(isMobile, true);
+        SCALE = SCALE_MOBILE;
+    }
+    else {
+        SCALE = SCALE_WIDE;
+    }
+
      // this was in bg originally
     let topLeftX = k.center().x - (PARALLAX_WIDTH*SCALE/2);
     let topLeftY = k.center().y - (PARALLAX_HEIGHT*SCALE/2);
@@ -108,7 +119,9 @@ export default async function initGame() {
 
     makeBackground(k, mask);
 
-    if (k.isTouchscreen()) makeControls(k, k.vec2(k.center().x, topLeftY+(PARALLAX_HEIGHT*SCALE)));
+    if (k.isTouchscreen()) {
+        makeControls(k, k.vec2(k.center().x, topLeftY+(PARALLAX_HEIGHT*SCALE)))
+    };
 
     let girlie = makeGirlie(
         k,
@@ -163,7 +176,7 @@ export default async function initGame() {
         -- flower anim happens on collide, girlie watering happens on collide
         -- nothing else happens - this is not responsible for any information delivery
 
-        
+
     let flower = makeFlower(
         k,
         mask,

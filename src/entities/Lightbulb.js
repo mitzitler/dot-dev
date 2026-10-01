@@ -1,7 +1,18 @@
-import { SCALE, PARALLAX_HEIGHT, DIST_FROM_CENTER_TO_GROUND_HEIGHT  } from "../constants";
+import { SCALE_WIDE, SCALE_MOBILE, PARALLAX_HEIGHT, DIST_FROM_CENTER_TO_GROUND_HEIGHT  } from "../constants";
+import { isMobile, store } from "../store";
+
+let SCALE = SCALE_WIDE;
 
 export default function makeLightbulb(k, mask, posVec2) {
     // this has k.anchor(), k.area(), k.body(), k.pos(), k.sprite - with default anim
+
+    if (store.get(isMobile, true)) {
+        SCALE = SCALE_MOBILE;
+    }
+    else {
+        SCALE = SCALE_WIDE;
+    }
+
     let lightbulbScale = SCALE-0.6;
 
     let lightbulb = mask.add([

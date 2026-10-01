@@ -15,7 +15,8 @@
     scale - only the mask's height (a real clip window, not a UV/quad
     remap) grows or shrinks.
 */
-import { SCALE } from "../constants.js";
+import { SCALE_WIDE, SCALE_MOBILE } from "../constants.js";
+import { isMobile, store } from "../store.js";
 import centerUpLoad from "./centerUpLoad.js";
 
 // native pixel dimensions of public/sprites/nametag.png
@@ -28,8 +29,17 @@ const HOLD_SECONDS = 0.5;
 // nametag load-out and the shader reveal run off a single tween so their clip
 // edges stay locked together on screen (see the outro block below)
 const SHADER_OUTRO_DURATION = 1.0;
+let SCALE = SCALE_WIDE;
+if (store.get(isMobile, true)) {
+        SCALE = SCALE_MOBILE;
+    }
+    else {
+        SCALE = SCALE_WIDE;
+    }
+
 
 function makeNametagMask(k, maskType) {
+
     const nametagMask = k.add([
         k.pos(k.center()),
         k.anchor("center"),

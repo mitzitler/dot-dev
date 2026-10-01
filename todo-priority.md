@@ -10,3 +10,8 @@ Separate from `todo.md`. These come first.
 - [ ] Standardize the textbox code
 - [ ] Flower should do nothing textbox-wise — just a little animation
 - [ ] Post online to ask for advice about animation smoothness
+
+## Notes
+
+- Changing the mobile scaling (which was necessary) of course shifted the positioning of the added scrolling objects — e.g. the lightbulb — relative to everything else. Not good; needs repositioning.
+

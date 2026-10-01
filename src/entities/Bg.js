@@ -1,7 +1,10 @@
-import { PARALLAX_HEIGHT, PARALLAX_WIDTH, SCALE} from "../constants.js";
+import { PARALLAX_HEIGHT, PARALLAX_WIDTH, SCALE_WIDE, SCALE_MOBILE} from "../constants.js";
+import { isMobile, store } from "../store.js";
+
 export const GROUND_SPEED = -16;
 let layers = null;
 let scrollingItems = [];
+let SCALE = SCALE_WIDE;
 
 export function makeLayers(k, mask) {
         return [
@@ -65,6 +68,13 @@ export function makeLayers(k, mask) {
 }
 
 export default function makeBackground(k, mask) {
+
+    if (store.get(isMobile, true)) {
+        SCALE = SCALE_MOBILE;
+    }
+    else {
+        SCALE = SCALE_WIDE;
+    }
 
     mask.add([
         k.sprite("bg-sky"), 
