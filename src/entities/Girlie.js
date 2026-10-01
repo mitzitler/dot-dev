@@ -13,12 +13,13 @@ export default function makeGirlie(k, posVec2, speed) {
         k.area(), //  k.area({ shape: new k.Rect(k.vec2(0), 5, 10)}), 
         k.body(),
         k.pos(posVec2),
-        k.z(999),
+        k.z(995),
         "girlie",
         // custom vars
         {
-            direction: "right", 
+            direction: "right",
             animationDirection: idle,
+            isBusy: false, // true while a scripted action (e.g. watering) owns the sprite
 
         },
     ]);
@@ -27,6 +28,11 @@ export default function makeGirlie(k, posVec2, speed) {
     let wasLifting = false;
 
     girlie.onUpdate(() => {
+
+        // While a scripted action owns the girlie (e.g. watering a flower), don't let the
+        // movement state machine below fight it for the animation — and since scroll() is
+        // only ever called inside this loop, bailing here also freezes the world.
+        if (girlie.isBusy) return;
 
         // Input comes from EITHER the keyboard OR the on-screen (touch) buttons.
         // The buttons publish the pressed direction to selectedDirectionBtn; translate
@@ -60,25 +66,21 @@ export default function makeGirlie(k, posVec2, speed) {
         if (up && left) {
             girlie.direction = "left";
             anim = `jump-${girlie.direction}`;
-            // girlie.move(-speed/2, 0);
             scroll(k, girlie.direction);
         }
         if (up && right) {
             girlie.direction = "right";
             anim = `jump-${girlie.direction}`;
-            // girlie.move(speed/2, 0);
             scroll(k, girlie.direction);
         }
         else if (left) {
             girlie.direction = "left";
             if (isRunning) {
                 anim = `run-${girlie.direction}`;
-                // girlie.move(-speed, 0);
                 scroll(k, girlie.direction, false);
             }
             else {
                 anim = `walk-${girlie.direction}`;
-                // girlie.move(-speed, 0);
                 scroll(k, girlie.direction);
             }
         }
@@ -86,18 +88,15 @@ export default function makeGirlie(k, posVec2, speed) {
             girlie.direction = "right";
             if (isRunning) {
                 anim = `run-${girlie.direction}`;
-                // girlie.move(speed, 0);
                 scroll(k, girlie.direction, false);
             }
             else {
                 anim = `walk-${girlie.direction}`;
-                // girlie.move(speed, 0);
                 scroll(k, girlie.direction);
             }
         }
         else if (up) {
             anim = `jump-${girlie.direction}`;
-            // girlie.move(0, speed);
         }
         else {
             anim = `idle-${girlie.direction}`;
@@ -114,4 +113,5 @@ export default function makeGirlie(k, posVec2, speed) {
         // if pos is too close to the edge, stop moving ?
     })
 
+    return girlie;
 }

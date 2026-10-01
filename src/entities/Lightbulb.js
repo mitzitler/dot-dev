@@ -6,7 +6,8 @@ export default function makeLightbulb(k, mask, posVec2) {
 
     let lightbulb = mask.add([
         k.sprite("lightbulb", {anim: "off"}),
-        k.scale(lightbulbScale),
+        // k.scale(lightbulbScale),
+        k.scale(SCALE),
         k.anchor("center"),
         // if this uses a shape for area, make sure its relative to itself, not to the canvas
         // k.area(), 

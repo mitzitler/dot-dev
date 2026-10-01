@@ -20,13 +20,11 @@ export const PALETTE = {
 };
 
 export const DIAGONAL_FACTOR = 1 / Math.sqrt(2);
-export const ZOOM_MAX_BOUND = 2;
-export const ZOOM_MIN_BOUND = 0.2;
 
 export const PARALLAX_WIDTH = 840; // or smaller? is that possible?
 export const PARALLAX_HEIGHT = 384;
 export const TOOLBOX_WIDTH = 80;
 export const CONTROLBAR_WIDTH = 250;
 export const CONTROLBAR_HEIGHT = 100;
-export const SCALE = 2.6; // at some point, scale will actually be determined by screen width, so not a constant
+export const SCALE = 2.08; // 2.6 * 0.8, baking in the old desktop camera zoom now that camera scaling is gone
 export const DIST_FROM_CENTER_TO_GROUND_HEIGHT = 100;
