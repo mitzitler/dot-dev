@@ -78,7 +78,7 @@ export default function makeGirlie(k, posVec2, speed) {
             anim = `jump-${girlie.direction}`;
             scroll(k, girlie.direction);
         }
-        if (up && right) {
+        else if (up && right) {
             girlie.direction = "right";
             anim = `jump-${girlie.direction}`;
             scroll(k, girlie.direction);

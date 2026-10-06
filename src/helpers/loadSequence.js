@@ -15,13 +15,13 @@
     scale - only the mask's height (a real clip window, not a UV/quad
     remap) grows or shrinks.
 */
-import { SCALE_WIDE, SCALE_MOBILE } from "../constants.js";
+import { SCALE_WIDE, SCALE_MOBILE, LOAD_IN_DURAION } from "../constants.js";
 import { isMobile, store } from "../store.js";
 import centerUpLoad from "./centerUpLoad.js";
 
 // native pixel dimensions of public/sprites/nametag.png
-const NAMETAG_WIDTH = 128;
-const NAMETAG_HEIGHT = 64;
+const NAMETAG_WIDTH = 373; // small = 128
+const NAMETAG_HEIGHT = 187; // small = 64
 
 const PRE_PAUSE_SECONDS = 0.5;
 const NAMETAG_IN_DURATION = 0.7;
@@ -53,7 +53,7 @@ function makeNametagMask(k, maskType) {
     ]);
 
     nametagMask.add([
-        k.sprite("nametag"),
+        k.sprite("nametag_large"),
         k.anchor("center"),
     ]);
 
@@ -64,7 +64,7 @@ export default async function startLoadSequence(k, shaderEntity, shaderProgress)
     await k.wait(PRE_PAUSE_SECONDS);
 
     const revealMask = makeNametagMask(k, "intersect");
-    await centerUpLoad(k, revealMask, NAMETAG_HEIGHT, NAMETAG_IN_DURATION, true);
+    await centerUpLoad(k, revealMask, NAMETAG_HEIGHT, LOAD_IN_DURAION, true);
     await k.wait(HOLD_SECONDS);
     revealMask.destroy();
 

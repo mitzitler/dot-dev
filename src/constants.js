@@ -29,3 +29,4 @@ export const CONTROLBAR_HEIGHT = 100;
 export const SCALE_WIDE = 2.08; // 2.6 * 0.8, baking in the old desktop camera zoom now that camera scaling is gone
 export const SCALE_MOBILE = SCALE_WIDE*0.75;
 export const DIST_FROM_CENTER_TO_GROUND_HEIGHT = 100;
+export const LOAD_IN_DURAION = 0.7;

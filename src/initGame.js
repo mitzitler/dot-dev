@@ -7,6 +7,7 @@ import makeBackground, { GROUND_SPEED, attachToScroll } from "./entities/Bg";
 import makeLightbulb from "./entities/Lightbulb";
 // import makeFlower from "./entities/Flower";
 import makeTooltipBox from "./components/TooltipBox";
+import makeContacts from "./components/Contacts.js";
 import makeControls from "./components/Controls";
 import startLoadSequence from "./helpers/loadSequence";
 
@@ -29,6 +30,7 @@ export default async function initGame() {
     
     const k = makeKaplayCtx();
     k.loadSprite("nametag", "./sprites/nametag.png");
+    k.loadSprite("nametag_large", "./sprites/nametag_large.png");
 
     k.loadSprite("bg-sky", "./sprites/bg-sky.png");
     k.loadSprite("bg-clouds-back", "./sprites/bg-clouds-back.png");
@@ -120,8 +122,12 @@ export default async function initGame() {
     makeBackground(k, mask);
 
     if (k.isTouchscreen()) {
-        makeControls(k, k.vec2(k.center().x, topLeftY+(PARALLAX_HEIGHT*SCALE)))
+        makeControls(k, k.vec2(k.center().x, topLeftY+((30+PARALLAX_HEIGHT)*SCALE)))
     };
+
+    let contactsYOffset = store.get(isMobile) ? 50 : 30;
+
+    makeContacts(k, k.vec2(k.center().x, topLeftY-(contactsYOffset*SCALE)));
 
     let girlie = makeGirlie(
         k,
@@ -141,8 +147,8 @@ export default async function initGame() {
         k,
         mask,
         k.vec2(
-            ((PARALLAX_WIDTH * SCALE) / 2) + 200, 
-            ((PARALLAX_HEIGHT * SCALE) / 2) + 100
+            ((PARALLAX_WIDTH * SCALE) / 2) + 150, 
+            ((PARALLAX_HEIGHT * SCALE) / 2) + 75
         ),
     )
     lb1.id = "about-me";
