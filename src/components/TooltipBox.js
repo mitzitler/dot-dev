@@ -1,14 +1,14 @@
-import { PALETTE, SCALE_WIDE, SCALE_MOBILE, TOOLBOX_WIDTH, LOAD_IN_DURAION } from "../constants";
-import { isMobile, store } from "../store";
+import { PALETTE, TOOLBOX_WIDTH, LOAD_IN_DURAION } from "../constants";
+import { getScale } from "../helpers/scale.js";
 import centerUpLoad from "../helpers/centerUpLoad";
 
 const delay = (durationMs) => {
         return new Promise(resolve => setTimeout(resolve, durationMs));
     }
 
-let SCALE = SCALE_WIDE;
-
 function makeBoxMask(k, maskType, parent, pos) {
+
+    const SCALE = getScale();
 
     // The mask holds the box content (added below) so it gets clipped. It's a
     // child of `parent` (e.g. the lightbulb) so `pos` is parent-local and the
@@ -33,18 +33,14 @@ export default async function makeTooltipBox(k, parent, posVec2, data, durationS
 
     await delay(durationS*1000);
 
-    if (store.get(isMobile, true)) {
-        SCALE = SCALE_MOBILE;
-    }
-    else {
-        SCALE = SCALE_WIDE;
-    }
+    const SCALE = getScale();
 
     // the vec2 it is passed is the center-bottom point of the box.
     // Create the mask FIRST, then build the box inside it so it gets clipped.
-    // Everything below is in unscaled, mask-local units (the mask applies SCALE).
+    // Everything below is in unscaled, mask-local units (the mask applies SCALE),
+    // so these base sizes scale visually with SCALE automatically.
     const textChars = data.text.length; // this should be the driver for the height of the box
-    const height = store.get(isMobile, true) ? 140 : 90;
+    const height = 90;
 
     // posVec2 is the desired center-bottom of the box (caller passes the top of
     // the lightbulb). The box sits centered in the mask for the center-out
@@ -69,7 +65,7 @@ export default async function makeTooltipBox(k, parent, posVec2, data, durationS
     const titleY = -(box.height / 2) + 5;
 
     // title
-    let titleSize = store.get(isMobile, true) ? 8 : 6;
+    let titleSize = 6;
     box.add([
         k.text(data.title, {
             font: "wellbutrin",
@@ -81,8 +77,8 @@ export default async function makeTooltipBox(k, parent, posVec2, data, durationS
     ]);
 
     // text
-    let texttSize = store.get(isMobile, true) ? 6 : 4;
-    let titleOffset = store.get(isMobile, true) ? 15 : 10;
+    let texttSize = 4;
+    let titleOffset = 10;
     box.add([
         k.text(data.text, {
             font: "wellbutrin",

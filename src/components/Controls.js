@@ -1,32 +1,17 @@
-import { PALETTE, SCALE_WIDE, SCALE_MOBILE } from "../constants";
-import { selectedDirectionBtn, isMobile, store } from "../store";
+import { selectedDirectionBtn, store } from "../store";
+import { getScale } from "../helpers/scale.js";
 
 // WARNING: these on-screen controls are intended for touchscreen / mobile only.
 // On desktop the site is driven by the keyboard, so gate this behind a
 // touchscreen check (e.g. k.isTouchscreen()) before calling makeControls.
-
-let SCALE = SCALE_MOBILE;
+// Button sprites are loaded once in initGame (assets are global in Kaplay).
 
 export default function makeControls(k, posVec2) {
     // the pos will be the top left corner?
-   // controls
-       // each sheet is 2 frames side by side: frame 0 = resting, frame 1 = pressed
-       k.loadSprite("btn-up", "./sprites/btn-control-up.png", {sliceX: 2, sliceY: 1});
-       k.loadSprite("btn-left", "./sprites/btn-control-left.png", {sliceX: 2, sliceY: 1});
-       k.loadSprite("btn-right", "./sprites/btn-control-right.png", {sliceX: 2, sliceY: 1});
-       k.loadSprite("btn-down", "./sprites/btn-control-down.png", {sliceX: 2, sliceY: 1});
-       k.loadSprite("btn-leftleft", "./sprites/btn-control-leftleft.png", {sliceX: 2, sliceY: 1});
-       k.loadSprite("btn-rightright", "./sprites/btn-control-rightright.png", {sliceX: 2, sliceY: 1});
-   
 
     let area;
 
-    if (store.get(isMobile, true)) {
-        SCALE = SCALE_MOBILE;
-    }
-    else {
-        SCALE = SCALE_WIDE;
-    }
+    const SCALE = getScale();
     // one standard button is 32 x 32
     // wide button is 48 x 32
     const width = 240;
@@ -43,7 +28,7 @@ export default function makeControls(k, posVec2) {
     const RESTING = 0;
     const PRESSED = 1;
 
-    const x_gap = 36;
+    const x_gap = 16 * SCALE; // scales with the buttons so spacing stays proportional at every size
     const midY = height * SCALE / 2;
 
     // left-to-right order; w is the native (unscaled) frame width — btnScale is

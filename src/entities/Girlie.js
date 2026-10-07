@@ -1,19 +1,12 @@
 // things to import from const: gravity
-import { SCALE_WIDE, SCALE_MOBILE } from "../constants.js";
 import { scroll } from "./Bg.js";
-import { selectedDirectionBtn, isMobile, store } from "../store";
-
-let SCALE = SCALE_WIDE;
+import { selectedDirectionBtn, store } from "../store";
+import { getScale } from "../helpers/scale.js";
 
 export default function makeGirlie(k, posVec2, speed) {
     // this has k.anchor(), k.area(), k.body(), k.pos(), k.sprite - with default anim
 
-    if (store.get(isMobile, true)) {
-        SCALE = SCALE_MOBILE;
-    }
-    else {
-        SCALE = SCALE_WIDE;
-    }
+    const SCALE = getScale();
 
     const idle = "idle-right";
     const girlie = k.add([

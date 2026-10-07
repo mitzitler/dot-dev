@@ -1,12 +1,12 @@
-import { PARALLAX_HEIGHT, PARALLAX_WIDTH, SCALE_WIDE, SCALE_MOBILE} from "../constants.js";
-import { isMobile, store } from "../store.js";
+import { PARALLAX_WIDTH } from "../constants.js";
+import { getScale } from "../helpers/scale.js";
 
 export const GROUND_SPEED = -16;
 let layers = null;
 let scrollingItems = [];
-let SCALE = SCALE_WIDE;
 
 export function makeLayers(k, mask) {
+        const SCALE = getScale();
         return [
         { // clouds-back
             speed: -1,
@@ -69,15 +69,15 @@ export function makeLayers(k, mask) {
 
 export default function makeBackground(k, mask) {
 
-    if (store.get(isMobile, true)) {
-        SCALE = SCALE_MOBILE;
-    }
-    else {
-        SCALE = SCALE_WIDE;
-    }
+    const SCALE = getScale();
+
+    // Reset scroll registrations on every (re)build: the scene is rebuilt from
+    // scratch on resize, so without this attachToScroll() would keep appending
+    // entries that point at destroyed objects from the previous build.
+    scrollingItems = [];
 
     mask.add([
-        k.sprite("bg-sky"), 
+        k.sprite("bg-sky"),
         k.scale(SCALE),
         k.pos(0, 0)
     ]);
@@ -97,7 +97,7 @@ export function attachToScroll(gameObj, speed = GROUND_SPEED) {
 
 export function scroll(k, direction, walk = true) {
 
-    const tileWidth = PARALLAX_WIDTH * SCALE;
+    const tileWidth = PARALLAX_WIDTH * getScale();
     let speedModifier = 5
     if (!walk) speedModifier = 20;
 

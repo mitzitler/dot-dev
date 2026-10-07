@@ -26,7 +26,20 @@ export const PARALLAX_HEIGHT = 384;
 export const TOOLBOX_WIDTH = 80;
 export const CONTROLBAR_WIDTH = 250;
 export const CONTROLBAR_HEIGHT = 100;
-export const SCALE_WIDE = 2.08; // 2.6 * 0.8, baking in the old desktop camera zoom now that camera scaling is gone
-export const SCALE_MOBILE = SCALE_WIDE*0.75;
+
+// Scale is now derived from the viewport (see helpers/resizeScale.js), not a
+// fixed device-class constant. SCALE_MAX caps it so the pixel art doesn't get
+// blurry on huge monitors; there is deliberately no SCALE_MIN (a floor would
+// re-introduce overflow on small screens, which is the thing we're fixing).
+// 2.08 was the old desktop scale (2.6 * 0.8); the cap sits a little above it.
+export const SCALE_MAX = 2.4;
+// Unscaled vertical room reserved above+below the parallax window for the
+// contacts bar (above) and the touch controls (below), so neither clips when
+// the scene is height-bound. Roughly: contacts offset + headroom + controls
+// offset (30) + controls height (80).
+export const CHROME_V = 170;
+// Unscaled vertical offset of the contacts bar above the parallax window.
+export const CONTACTS_Y_OFFSET = 40;
+
 export const DIST_FROM_CENTER_TO_GROUND_HEIGHT = 100;
 export const LOAD_IN_DURAION = 0.7;
