@@ -168,12 +168,12 @@ export default async function initGame() {
         // keep that exact placement on desktop while staying on the ground when
         // zoomed in on mobile (an unscaled +150/+75 drifts off at other scales).
         const offsetScale = SCALE / SCALE_REFERENCE;
+        let lbY = ((PARALLAX_HEIGHT * SCALE) / 2) + 75 * offsetScale;
         let lb1 = makeLightbulb(
             k,
             mask,
             k.vec2(
-                ((PARALLAX_WIDTH * SCALE) / 2) + 150 * offsetScale,
-                ((PARALLAX_HEIGHT * SCALE) / 2) + 75 * offsetScale
+                ((PARALLAX_WIDTH * SCALE) / 2) + 200 * offsetScale, lbY
             ),
         )
         lb1.id = "about-me";
@@ -202,8 +202,7 @@ export default async function initGame() {
             k,
             mask,
             k.vec2(
-                ((PARALLAX_WIDTH * SCALE) / 2) + (-250) * offsetScale,
-                ((PARALLAX_HEIGHT * SCALE) / 2) + 75 * offsetScale
+                ((PARALLAX_WIDTH * SCALE) / 2) + (-250) * offsetScale, lbY
             ),
         )
         lb2.id = "contact-me";
