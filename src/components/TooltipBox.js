@@ -1,4 +1,14 @@
-import { PALETTE, TOOLBOX_WIDTH, LOAD_IN_DURAION } from "../constants";
+import {
+    PALETTE,
+    LOAD_IN_DURAION,
+    TOOLTIP_WIDTH_PX,
+    TOOLTIP_HEIGHT_PX,
+    TOOLTIP_TITLE_PX,
+    TOOLTIP_BODY_PX,
+    TOOLTIP_PAD_PX,
+    TOOLTIP_TITLE_GAP_PX,
+    TOOLTIP_LINE_PX,
+} from "../constants";
 import { getScale } from "../helpers/scale.js";
 import centerUpLoad from "../helpers/centerUpLoad";
 
@@ -6,7 +16,16 @@ const delay = (durationMs) => {
         return new Promise(resolve => setTimeout(resolve, durationMs));
     }
 
-function makeBoxMask(k, maskType, parent, pos) {
+// The tooltip's mask is a child of the lightbulb (which already carries
+// k.scale(SCALE)) AND the mask applies SCALE again, so box CONTENT renders at
+// SCALE². Dividing a target screen px by SCALE² lands it at exactly that many
+// screen px on every device, independent of zoom.
+const content = (screenPx, scale) => screenPx / (scale * scale);
+// The mask's POSITION, by contrast, lives one level up in lightbulb-local space
+// (a single SCALE to screen), so positional offsets divide by SCALE only.
+const local = (screenPx, scale) => screenPx / scale;
+
+function makeBoxMask(k, maskType, parent, pos, boxW) {
 
     const SCALE = getScale();
 
@@ -18,7 +37,7 @@ function makeBoxMask(k, maskType, parent, pos) {
         k.pos(pos),
         k.anchor("center"),
         k.scale(SCALE),
-        k.rect(TOOLBOX_WIDTH, 0),
+        k.rect(boxW, 0),
         k.mask(maskType),
         k.z(1001),
     ]);
@@ -35,59 +54,56 @@ export default async function makeTooltipBox(k, parent, posVec2, data, durationS
 
     const SCALE = getScale();
 
-    // the vec2 it is passed is the center-bottom point of the box.
-    // Create the mask FIRST, then build the box inside it so it gets clipped.
-    // Everything below is in unscaled, mask-local units (the mask applies SCALE),
-    // so these base sizes scale visually with SCALE automatically.
-    const textChars = data.text.length; // this should be the driver for the height of the box
-    const height = 90;
+    // Content dims use content() (÷SCALE²) so they render at the target screen px
+    // regardless of zoom. The box is WIDE (wider than tall), so longer copy wraps
+    // onto a few lines within the width rather than making the box grow downward.
+    const width = content(TOOLTIP_WIDTH_PX, SCALE);
+    const height = content(TOOLTIP_HEIGHT_PX, SCALE);
+    const pad = content(TOOLTIP_PAD_PX, SCALE);
 
     // posVec2 is the desired center-bottom of the box (caller passes the top of
-    // the lightbulb). The box sits centered in the mask for the center-out
-    // reveal, so push the mask center up by half the box's *visual* height
-    // (height is in mask-local units, so visual height is height*SCALE) plus a
-    // 5px gap, so the box's bottom edge lands 5px above posVec2.
-    const GAP = 5;
+    // the lightbulb). Push the mask center up by half the box's *visual* height
+    // plus a small gap so the box's bottom edge lands just above posVec2. This
+    // offset is in lightbulb-local space (one SCALE): (height × SCALE)/2 works
+    // because height is ÷SCALE², so height×SCALE = (visual height)/SCALE.
+    const GAP = local(6, SCALE);
     const maskPos = k.vec2(posVec2.x, posVec2.y - GAP - (height * SCALE) / 2);
-    const revealMask = makeBoxMask(k, "intersect", parent, maskPos);
+    const revealMask = makeBoxMask(k, "intersect", parent, maskPos, width);
 
     // mask is anchored center, so local (0,0) is its center. Anchor the box
     // there so it lines up with the mask's clip region.
     const box = revealMask.add([
         k.anchor("center"),
         k.pos(0, 0),
-        k.rect(TOOLBOX_WIDTH, height),
+        k.rect(width, height),
         k.color(k.Color.fromHex(PALETTE.colorMaroon)),
         k.opacity(1),
     ]);
     // box is anchor-center, so its local top-left is (-width/2, -height/2).
-    const titleX = -(box.width / 2) + 5;
-    const titleY = -(box.height / 2) + 5;
+    const titleX = -(box.width / 2) + pad;
+    const titleY = -(box.height / 2) + pad;
 
     // title
-    let titleSize = 6;
     box.add([
         k.text(data.title, {
             font: "wellbutrin",
-            size: titleSize,
+            size: content(TOOLTIP_TITLE_PX, SCALE),
         }),
         k.color(k.Color.fromHex(PALETTE.colorBeige)),
         k.pos(titleX, titleY),
         k.opacity(1),
     ]);
 
-    // text
-    let texttSize = 4;
-    let titleOffset = 10;
+    // text — wraps within the box width (minus padding on both sides)
     box.add([
         k.text(data.text, {
             font: "wellbutrin",
-            size: texttSize,
-            width: TOOLBOX_WIDTH - 10,
-            lineSpacing: 4,
+            size: content(TOOLTIP_BODY_PX, SCALE),
+            width: width - pad * 2,
+            lineSpacing: content(TOOLTIP_LINE_PX, SCALE),
         }),
         k.color(k.Color.fromHex(PALETTE.colorBeige)),
-        k.pos(titleX, titleY + titleOffset),
+        k.pos(titleX, titleY + content(TOOLTIP_TITLE_GAP_PX, SCALE)),
         k.opacity(1),
     ]);
 

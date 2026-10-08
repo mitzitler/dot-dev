@@ -1,4 +1,4 @@
-import { PARALLAX_WIDTH } from "../constants.js";
+import { PARALLAX_WIDTH, SCALE_REFERENCE } from "../constants.js";
 import { getScale } from "../helpers/scale.js";
 
 export const GROUND_SPEED = -16;
@@ -97,9 +97,15 @@ export function attachToScroll(gameObj, speed = GROUND_SPEED) {
 
 export function scroll(k, direction, walk = true) {
 
-    const tileWidth = PARALLAX_WIDTH * getScale();
+    const SCALE = getScale();
+    const tileWidth = PARALLAX_WIDTH * SCALE;
     let speedModifier = 5
     if (!walk) speedModifier = 20;
+    // Normalize world speed across zoom levels: a bigger SCALE means a bigger
+    // world, so without this a fixed pixel velocity feels fast when zoomed out
+    // (small SCALE) and slow when zoomed in. Dividing by SCALE_REFERENCE keeps
+    // the desktop feel identical while fixing the "too fast on mobile" case.
+    speedModifier *= SCALE / SCALE_REFERENCE;
 
     for (const layer of layers) {
         const last = layer.parts.length - 1;

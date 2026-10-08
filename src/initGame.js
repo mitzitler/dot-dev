@@ -1,4 +1,4 @@
-import { PALETTE, PARALLAX_HEIGHT, PARALLAX_WIDTH, DIST_FROM_CENTER_TO_GROUND_HEIGHT, CONTACTS_Y_OFFSET } from "./constants";
+import { PALETTE, PARALLAX_HEIGHT, PARALLAX_WIDTH, DIST_FROM_CENTER_TO_GROUND_HEIGHT, CONTACTS_Y_OFFSET, SCALE_REFERENCE } from "./constants";
 import makeKaplayCtx from "./kaplayCtx";
 import makeGirlie from "./entities/Girlie";
 import makeBackground, { GROUND_SPEED, attachToScroll } from "./entities/Bg";
@@ -154,12 +154,17 @@ export default async function initGame() {
         );
 
         // this needs to be quarantined better
+        // Offsets from the parallax center. They were hand-tuned as pixels at the
+        // reference (old desktop) scale, so multiply by SCALE/SCALE_REFERENCE to
+        // keep that exact placement on desktop while staying on the ground when
+        // zoomed in on mobile (an unscaled +150/+75 drifts off at other scales).
+        const offsetScale = SCALE / SCALE_REFERENCE;
         let lb1 = makeLightbulb(
             k,
             mask,
             k.vec2(
-                ((PARALLAX_WIDTH * SCALE) / 2) + 150,
-                ((PARALLAX_HEIGHT * SCALE) / 2) + 75
+                ((PARALLAX_WIDTH * SCALE) / 2) + 150 * offsetScale,
+                ((PARALLAX_HEIGHT * SCALE) / 2) + 75 * offsetScale
             ),
         )
         lb1.id = "about-me";
