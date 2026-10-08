@@ -56,7 +56,7 @@ export default function makeControls(k, posVec2) {
             k.sprite(def.name, { frame: RESTING }),
             k.scale(SCALE),
             k.anchor("left"),
-            k.pos(cursorX, midY+def.y_offset),
+            k.pos(cursorX, midY + def.y_offset * SCALE), // scale the up-button lift like everything else
             k.area(),
             k.z(999),
             def.name,
