@@ -39,7 +39,7 @@ export const SCALE_MAX = 2.4;
 // offset (30) + controls height (80).
 export const CHROME_V = 170;
 // Unscaled vertical offset of the contacts bar above the parallax window.
-export const CONTACTS_Y_OFFSET = 40;
+export const CONTACTS_Y_OFFSET = 30;
 
 export const DIST_FROM_CENTER_TO_GROUND_HEIGHT = 100;
 export const LOAD_IN_DURAION = 0.7;

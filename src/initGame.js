@@ -16,6 +16,7 @@ import {GIRLIE_IDLE_RIGHT_FRAMES, GIRLIE_IDLE_LEFT_FRAMES, GIRLIE_WALK_RIGHT_FRA
     GIRLIE_JUMP_RIGHT_FRAMES, GIRLIE_JUMP_LEFT_FRAMES, GIRLIE_LIFT_RIGHT_FRAMES,
     GIRLIE_LIFT_LEFT_FRAMES, GIRLIE_WATER_RIGHT_FRAMES, GIRLIE_WATER_LEFT_FRAMES
 } from "./anims";
+import { makeMarquee } from "./components/Marquee.js";
 
 export default async function initGame() {
 
@@ -43,6 +44,9 @@ export default async function initGame() {
     k.loadSprite("bg-trees-front", "./sprites/bg-trees-front.png");
     k.loadSprite("bg-ground", "./sprites/bg-ground.png");
     k.loadSprite("bg-frame", "./sprites/bg-frame.png");
+
+    k.loadSprite("marquee1", "./sprites/marquee1.png");
+    k.loadSprite("marquee2", "./sprites/marquee2.png");
 
     // control buttons (touch) — each sheet is 2 frames: 0 = resting, 1 = pressed
     k.loadSprite("btn-up", "./sprites/btn-control-up.png", {sliceX: 2, sliceY: 1});
@@ -128,6 +132,8 @@ export default async function initGame() {
             k.fixed(),
         ])
 
+        
+
         // this was in bg originally
         let topLeftX = k.center().x - (PARALLAX_WIDTH*SCALE/2);
         let topLeftY = k.center().y - (PARALLAX_HEIGHT*SCALE/2);
@@ -144,6 +150,9 @@ export default async function initGame() {
         if (k.isTouchscreen()) {
             makeControls(k, k.vec2(k.center().x, topLeftY+((30+PARALLAX_HEIGHT)*SCALE)))
         };
+
+        makeMarquee(k, k.vec2(0+(10*SCALE), 0+(1*SCALE)), "marquee1", "topleft");
+        makeMarquee(k, k.vec2(0+(10*SCALE), k.height()-(1*SCALE)), "marquee2", "botleft");
 
         makeContacts(k, k.vec2(k.center().x, topLeftY-(CONTACTS_Y_OFFSET*SCALE)));
 
