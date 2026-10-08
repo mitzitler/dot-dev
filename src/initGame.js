@@ -1,4 +1,4 @@
-import { PALETTE, PARALLAX_HEIGHT, PARALLAX_WIDTH, DIST_FROM_CENTER_TO_GROUND_HEIGHT, CONTACTS_Y_OFFSET, SCALE_REFERENCE } from "./constants";
+import { PALETTE, PARALLAX_HEIGHT, PARALLAX_WIDTH, DIST_FROM_CENTER_TO_GROUND_HEIGHT, CONTACTS_Y_OFFSET, CONTACTS_Y_OFFSET_BOT, SCALE_REFERENCE } from "./constants";
 import makeKaplayCtx from "./kaplayCtx";
 import makeGirlie from "./entities/Girlie";
 import makeBackground, { GROUND_SPEED, attachToScroll } from "./entities/Bg";
@@ -132,11 +132,10 @@ export default async function initGame() {
             k.fixed(),
         ])
 
-        
-
         // this was in bg originally
         let topLeftX = k.center().x - (PARALLAX_WIDTH*SCALE/2);
         let topLeftY = k.center().y - (PARALLAX_HEIGHT*SCALE/2);
+        let botLeftY = k.center().y + (PARALLAX_HEIGHT*SCALE/2);
 
         const mask = k.add([
             k.pos(topLeftX, topLeftY),
@@ -148,13 +147,14 @@ export default async function initGame() {
 
         // Touch controls only — desktop is keyboard-driven.
         if (k.isTouchscreen()) {
-            makeControls(k, k.vec2(k.center().x, topLeftY+((30+PARALLAX_HEIGHT)*SCALE)))
-        };
+            makeControls(k, k.vec2(k.center().x, topLeftY+((30+PARALLAX_HEIGHT)*SCALE)));
+            makeContacts(k, k.vec2(k.center().x, topLeftY-(CONTACTS_Y_OFFSET*SCALE)));
+        } else {
+            makeContacts(k, k.vec2(k.center().x, botLeftY+(CONTACTS_Y_OFFSET_BOT*SCALE)));
+        }
 
         makeMarquee(k, k.vec2(0+(10*SCALE), 0+(1*SCALE)), "marquee1", "topleft");
         makeMarquee(k, k.vec2(0+(10*SCALE), k.height()-(1*SCALE)), "marquee2", "botleft");
-
-        makeContacts(k, k.vec2(k.center().x, topLeftY-(CONTACTS_Y_OFFSET*SCALE)));
 
         let girlie = makeGirlie(
             k,
@@ -196,6 +196,36 @@ export default async function initGame() {
         if (lb1.isOn) {
             lb1.play("on");
             lb1.stop();
+        }
+
+        let lb2 = makeLightbulb(
+            k,
+            mask,
+            k.vec2(
+                ((PARALLAX_WIDTH * SCALE) / 2) + (-250) * offsetScale,
+                ((PARALLAX_HEIGHT * SCALE) / 2) + 75 * offsetScale
+            ),
+        )
+        lb2.id = "contact-me";
+        attachToScroll(lb2, GROUND_SPEED);
+
+        lb2.onCollide("girlie", () => {
+            if (lb2.isOn) return;
+            lb2.isOn = true;
+
+            lb2.play("lighting");
+            lb2.onAnimEnd(anim => { if (anim === "lighting") {
+                lb2.play("on");
+                lb2.stop();
+            } })
+
+            const topCenter = k.vec2(0, -lb2.height / 2);
+            makeTooltipBox(k, lb2, topCenter, toolboxData[1], 2.5)
+        })
+
+        if (lb2.isOn) {
+            lb2.play("on");
+            lb2.stop();
         }
 
         // this is the flower bit

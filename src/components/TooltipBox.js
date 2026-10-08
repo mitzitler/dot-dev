@@ -58,7 +58,7 @@ export default async function makeTooltipBox(k, parent, posVec2, data, durationS
     // regardless of zoom. The box is WIDE (wider than tall), so longer copy wraps
     // onto a few lines within the width rather than making the box grow downward.
     const width = content(TOOLTIP_WIDTH_PX, SCALE);
-    const height = content(TOOLTIP_HEIGHT_PX, SCALE);
+    const height = content(TOOLTIP_HEIGHT_PX, SCALE)+5;
     const pad = content(TOOLTIP_PAD_PX, SCALE);
 
     // posVec2 is the desired center-bottom of the box (caller passes the top of
@@ -76,7 +76,8 @@ export default async function makeTooltipBox(k, parent, posVec2, data, durationS
         k.anchor("center"),
         k.pos(0, 0),
         k.rect(width, height),
-        k.color(k.Color.fromHex(PALETTE.colorMaroon)),
+        k.color(k.Color.fromHex(PALETTE.colorBeige)),
+        k.outline(2, k.Color.fromHex(PALETTE.colorMaroon)),
         k.opacity(1),
     ]);
     // box is anchor-center, so its local top-left is (-width/2, -height/2).
@@ -89,7 +90,7 @@ export default async function makeTooltipBox(k, parent, posVec2, data, durationS
             font: "wellbutrin",
             size: content(TOOLTIP_TITLE_PX, SCALE),
         }),
-        k.color(k.Color.fromHex(PALETTE.colorBeige)),
+        k.color(k.Color.fromHex(PALETTE.colorMaroon)),
         k.pos(titleX, titleY),
         k.opacity(1),
     ]);
@@ -102,7 +103,7 @@ export default async function makeTooltipBox(k, parent, posVec2, data, durationS
             width: width - pad * 2,
             lineSpacing: content(TOOLTIP_LINE_PX, SCALE),
         }),
-        k.color(k.Color.fromHex(PALETTE.colorBeige)),
+        k.color(k.Color.fromHex(PALETTE.colorMaroon)),
         k.pos(titleX, titleY + content(TOOLTIP_TITLE_GAP_PX, SCALE)),
         k.opacity(1),
     ]);
