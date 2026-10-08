@@ -8,7 +8,7 @@ export default function makeContacts(k, posVec2) {
 
     const SCALE = getScale();
     // one standard button is 32 x 32
-    const width = 284;
+    const width = 156;
     const height = 32;
     area = k.add([
         k.anchor("topleft"),
@@ -24,7 +24,7 @@ export default function makeContacts(k, posVec2) {
     const midY = height * SCALE / 2;
 
     const btnDefs = [
-        { name: "contact_me", w: 128, isBtn: false, },
+        // { name: "contact_me", w: 128, isBtn: false, },
         { name: "btn-email", w:32, isBtn: true, 
             modalText: "Redirecting to your default email client...",
             link: 'mailto:mitzitler@gmail.com?subject=`Your Website is So Cool!`'

@@ -40,6 +40,7 @@ export const SCALE_MAX = 2.4;
 export const CHROME_V = 170;
 // Unscaled vertical offset of the contacts bar above the parallax window.
 export const CONTACTS_Y_OFFSET = 30;
+export const CONTACTS_Y_OFFSET_BOT = 15;
 
 // --- mobile zoom ---------------------------------------------------------
 // Below this viewport width we treat the screen as "mobile/narrow" and ZOOM IN
@@ -65,8 +66,8 @@ export const SCALE_REFERENCE = 2.08;
 // copy stays on a few lines and fits the height instead of growing downward.
 export const TOOLTIP_WIDTH_PX = 360;
 export const TOOLTIP_HEIGHT_PX = 150;
-export const TOOLTIP_TITLE_PX = 18; // heading
-export const TOOLTIP_BODY_PX = 14;  // body — reads well for the pixel font at this size
+export const TOOLTIP_TITLE_PX = 19; // heading
+export const TOOLTIP_BODY_PX = 15;  // body — reads well for the pixel font at this size
 export const TOOLTIP_PAD_PX = 14;   // inner padding from the box edge
 export const TOOLTIP_TITLE_GAP_PX = 24; // top of title → top of body
 export const TOOLTIP_LINE_PX = 4;   // extra line spacing for the body copy
