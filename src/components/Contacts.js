@@ -64,7 +64,6 @@ export default function makeContacts(k, posVec2) {
         btn.onHoverUpdate(() => {
             if (k.isMouseDown() && b.isBtn) {
                 btn.frame = PRESSED;
-                console.log("link for button: ", b.name, ", ", b.link);
                 window.open(b.link, '_blank')
                 // open link
                 // perhaps show a modal

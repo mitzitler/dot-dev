@@ -13,6 +13,11 @@
         "id": 3,
         "title": "Surprise?",
         "text": "'S' stands for surprise - it also stands for 'skill'. I wonder what happens if you press 'S'? I wonder what happens if you press it again?"
+    },
+    {
+        "id": 4,
+        "title": "Have Fun!",
+        "text": "I hope you have fun playing around in this environment, it's a labor of love. "
     }
 
 ]
