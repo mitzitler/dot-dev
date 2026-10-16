@@ -10,40 +10,34 @@ import {
     TOOLTIP_LINE_PX,
 } from "../constants";
 import { getScale } from "../helpers/scale.js";
-import centerUpLoad from "../helpers/centerUpLoad";
+import centerUpScale from "../helpers/centerUpScale";
 
 const delay = (durationMs) => {
         return new Promise(resolve => setTimeout(resolve, durationMs));
     }
 
-// The tooltip's mask is a child of the lightbulb (which already carries
-// k.scale(SCALE)) AND the mask applies SCALE again, so box CONTENT renders at
-// SCALE². Dividing a target screen px by SCALE² lands it at exactly that many
-// screen px on every device, independent of zoom.
+// ms per character for the typewriter reveal.
+const TYPE_CHAR_MS = 30;
+
+// Reveals a kaplay text object one character at a time by growing its string.
+// The glyphs are always drawn at their true size — no scaling, no opacity — so
+// the text keeps full pixel integrity while the box animates around it.
+const typewrite = async (textObj, full) => {
+    for (let i = 1; i <= full.length; i++) {
+        textObj.text = full.slice(0, i);
+        await delay(TYPE_CHAR_MS);
+    }
+    textObj.text = full;
+};
+
+// The box is a child of the lightbulb (which already carries k.scale(SCALE)) AND
+// the box applies SCALE again, so box CONTENT renders at SCALE². Dividing a
+// target screen px by SCALE² lands it at exactly that many screen px on every
+// device, independent of zoom.
 const content = (screenPx, scale) => screenPx / (scale * scale);
-// The mask's POSITION, by contrast, lives one level up in lightbulb-local space
+// The box's POSITION, by contrast, lives one level up in lightbulb-local space
 // (a single SCALE to screen), so positional offsets divide by SCALE only.
 const local = (screenPx, scale) => screenPx / scale;
-
-function makeBoxMask(k, maskType, parent, pos, boxW) {
-
-    const SCALE = getScale();
-
-    // The mask holds the box content (added below) so it gets clipped. It's a
-    // child of `parent` (e.g. the lightbulb) so `pos` is parent-local and the
-    // tooltip rides along as the parent scrolls. The mask carries k.scale(SCALE),
-    // so everything added under it must use unscaled, mask-local units.
-    const boxMask = parent.add([
-        k.pos(pos),
-        k.anchor("center"),
-        k.scale(SCALE),
-        k.rect(boxW, 0),
-        k.mask(maskType),
-        k.z(1001),
-    ]);
-
-    return boxMask;
-}
 
 // parent is the item that triggers it
 // posVec2 is the center bottom point of the box
@@ -62,42 +56,54 @@ export default async function makeTooltipBox(k, parent, posVec2, data, durationS
     const pad = content(TOOLTIP_PAD_PX, SCALE);
 
     // posVec2 is the desired center-bottom of the box (caller passes the top of
-    // the lightbulb). Push the mask center up by half the box's *visual* height
+    // the lightbulb). Push the box center up by half the box's *visual* height
     // plus a small gap so the box's bottom edge lands just above posVec2. This
     // offset is in lightbulb-local space (one SCALE): (height × SCALE)/2 works
     // because height is ÷SCALE², so height×SCALE = (visual height)/SCALE.
     const GAP = local(6, SCALE);
-    const maskPos = k.vec2(posVec2.x, posVec2.y - GAP - (height * SCALE) / 2);
-    const revealMask = makeBoxMask(k, "intersect", parent, maskPos, width);
+    const boxPos = k.vec2(posVec2.x, posVec2.y - GAP - (height * SCALE) / 2);
 
-    // mask is anchored center, so local (0,0) is its center. Anchor the box
-    // there so it lines up with the mask's clip region.
-    const box = revealMask.add([
+    // The box is a direct child of the lightbulb (no nested mask), so it clips
+    // cleanly to the scene mask and rides along as the lightbulb scrolls. It
+    // carries k.scale(SCALE) — the same scale the old reveal mask applied — so
+    // all content() / local() math is unchanged. It starts collapsed (scale.y 0)
+    // and is grown open by centerUpScale below; no opacity is ever touched.
+    const box = parent.add([
+        k.pos(boxPos),
         k.anchor("center"),
-        k.pos(0, 0),
+        k.scale(k.vec2(SCALE, 0)),
         k.rect(width, height),
         k.color(k.Color.fromHex(PALETTE.colorBeige)),
-        k.outline(2, k.Color.fromHex(PALETTE.colorMaroon)),
-        k.opacity(1),
+        k.z(1001),
     ]);
     // box is anchor-center, so its local top-left is (-width/2, -height/2).
     const titleX = -(box.width / 2) + pad;
     const titleY = -(box.height / 2) + pad;
 
-    // title
-    box.add([
-        k.text(data.title, {
+    // 1) Squash the borderless, empty box open to full size from its center.
+    //    Only the plain fill scales — no outline, no text — so nothing that
+    //    needs crisp pixels is ever distorted.
+    await centerUpScale(k, box, SCALE, LOAD_IN_DURAION, true);
+
+    // 2) Add the border now that the box is at full size, so the outline is
+    //    only ever drawn at its true 1px weight.
+    box.use(k.outline(1, k.Color.fromHex(PALETTE.colorMaroon)));
+
+    // 3) Add the text at full size (empty), then type it in character by
+    //    character. Text is only ever rendered at its true scale, and nothing
+    //    touches opacity — pixel + palette integrity preserved.
+    const title = box.add([
+        k.text("", {
             font: "wellbutrin",
             size: content(TOOLTIP_TITLE_PX, SCALE),
         }),
         k.color(k.Color.fromHex(PALETTE.colorMaroon)),
         k.pos(titleX, titleY),
-        k.opacity(1),
     ]);
 
-    // text — wraps within the box width (minus padding on both sides)
-    box.add([
-        k.text(data.text, {
+    // body — wraps within the box width (minus padding on both sides)
+    const body = box.add([
+        k.text("", {
             font: "wellbutrin",
             size: content(TOOLTIP_BODY_PX, SCALE),
             width: width - pad * 2,
@@ -105,10 +111,10 @@ export default async function makeTooltipBox(k, parent, posVec2, data, durationS
         }),
         k.color(k.Color.fromHex(PALETTE.colorMaroon)),
         k.pos(titleX, titleY + content(TOOLTIP_TITLE_GAP_PX, SCALE)),
-        k.opacity(1),
     ]);
 
-    await centerUpLoad(k, revealMask, height, LOAD_IN_DURAION, true);
+    await typewrite(title, data.title);
+    await typewrite(body, data.text);
 
     return box;
 }

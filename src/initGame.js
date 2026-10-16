@@ -1,21 +1,17 @@
 import { PALETTE, PARALLAX_HEIGHT, PARALLAX_WIDTH, DIST_FROM_CENTER_TO_GROUND_HEIGHT, CONTACTS_Y_OFFSET, CONTACTS_Y_OFFSET_BOT, SCALE_REFERENCE } from "./constants";
 import makeKaplayCtx from "./kaplayCtx";
 import makeGirlie from "./entities/Girlie";
+import { makeGround } from "./entities/Ground.js";
 import makeBackground, { GROUND_SPEED, attachToScroll } from "./entities/Bg";
 import makeLightbulb from "./entities/Lightbulb";
+import { fallFromSky } from "./helpers/fallFromSky.js";
 // import makeFlower from "./entities/Flower";
-import makeTooltipBox from "./components/TooltipBox";
 import makeContacts from "./components/Contacts.js";
 import makeControls from "./components/Controls";
 import startLoadSequence from "./helpers/loadSequence";
 import resizeScale from "./helpers/resizeScale";
 import { setScale, getScale } from "./helpers/scale.js";
-
-import {GIRLIE_IDLE_RIGHT_FRAMES, GIRLIE_IDLE_LEFT_FRAMES, GIRLIE_WALK_RIGHT_FRAMES,
-    GIRLIE_WALK_LEFT_FRAMES, GIRLIE_RUN_RIGHT_FRAMES, GIRLIE_RUN_LEFT_FRAMES,
-    GIRLIE_JUMP_RIGHT_FRAMES, GIRLIE_JUMP_LEFT_FRAMES, GIRLIE_LIFT_RIGHT_FRAMES,
-    GIRLIE_LIFT_LEFT_FRAMES, GIRLIE_WATER_RIGHT_FRAMES, GIRLIE_WATER_LEFT_FRAMES
-} from "./anims";
+import { loadSprites } from "./helpers/loadSprites.js";
 import { makeMarquee } from "./components/Marquee.js";
 
 export default async function initGame() {
@@ -28,86 +24,12 @@ export default async function initGame() {
     const toolboxData = await( await fetch('./configs/toolBoxTexts.json')).json();
 
     const k = makeKaplayCtx();
+    k.setGravity(200);
 
     // ---- one-time asset loading ----
     // Assets are global in Kaplay and survive scene switches, so load everything
     // ONCE here (not inside buildScene, which re-runs on every resize).
-    k.loadSprite("nametag", "./sprites/nametag.png");
-    k.loadSprite("nametag_large", "./sprites/nametag_large.png");
-
-    k.loadSprite("bg-sky", "./sprites/bg-sky.png");
-    k.loadSprite("bg-clouds-back", "./sprites/bg-clouds-back.png");
-    k.loadSprite("bg-clouds-front", "./sprites/bg-clouds-front.png");
-    k.loadSprite("bg-mountains", "./sprites/bg-mountains.png");
-    k.loadSprite("bg-hills", "./sprites/bg-hills.png");
-    k.loadSprite("bg-trees-back", "./sprites/bg-trees-back.png");
-    k.loadSprite("bg-trees-front", "./sprites/bg-trees-front.png");
-    k.loadSprite("bg-ground", "./sprites/bg-ground.png");
-    k.loadSprite("bg-frame", "./sprites/bg-frame.png");
-
-    k.loadSprite("marquee1", "./sprites/marquee1.png");
-    k.loadSprite("marquee2", "./sprites/marquee2.png");
-
-    // control buttons (touch) — each sheet is 2 frames: 0 = resting, 1 = pressed
-    k.loadSprite("btn-up", "./sprites/btn-control-up.png", {sliceX: 2, sliceY: 1});
-    k.loadSprite("btn-left", "./sprites/btn-control-left.png", {sliceX: 2, sliceY: 1});
-    k.loadSprite("btn-right", "./sprites/btn-control-right.png", {sliceX: 2, sliceY: 1});
-    k.loadSprite("btn-down", "./sprites/btn-control-down.png", {sliceX: 2, sliceY: 1});
-    k.loadSprite("btn-leftleft", "./sprites/btn-control-leftleft.png", {sliceX: 2, sliceY: 1});
-    k.loadSprite("btn-rightright", "./sprites/btn-control-rightright.png", {sliceX: 2, sliceY: 1});
-
-    // contact bar
-    k.loadSprite("contact_me", "./sprites/contact_me.png", {sliceX:1, sliceY: 1});
-    k.loadSprite("btn-email", "./sprites/btn-contact-email.png", {sliceX:2, sliceY: 1});
-    k.loadSprite("btn-github", "./sprites/btn-contact-github.png", {sliceX:2, sliceY: 1});
-    k.loadSprite("btn-linkedin", "./sprites/btn-contact-linkedin.png", {sliceX:2, sliceY: 1});
-
-    k.loadSprite("girlie", "./sprites/purple_girlie2.png",
-        {
-        sliceX: 10,
-        sliceY: 9,
-        anims: {
-            "idle-right": {frames: GIRLIE_IDLE_RIGHT_FRAMES, loop: true},
-            "idle-left": {frames: GIRLIE_IDLE_LEFT_FRAMES, loop: true},
-            "walk-right": {frames: GIRLIE_WALK_RIGHT_FRAMES, loop: true, speed: 12 },
-            "walk-left": {frames: GIRLIE_WALK_LEFT_FRAMES, loop: true, speed: 12 },
-            "run-right": {frames: GIRLIE_RUN_RIGHT_FRAMES, loop: true, speed: 24 },
-            "run-left": {frames: GIRLIE_RUN_LEFT_FRAMES, loop: true, speed: 24 },
-            "jump-right": {frames: GIRLIE_JUMP_RIGHT_FRAMES, loop: false},
-            "jump-left": {frames: GIRLIE_JUMP_LEFT_FRAMES, loop: false},
-
-            "watering-right": {frames: GIRLIE_WATER_RIGHT_FRAMES, loop: false},
-            "watering-left": {frames: GIRLIE_WATER_LEFT_FRAMES, loop: false},
-
-            "lift-right": {frames: GIRLIE_LIFT_RIGHT_FRAMES, loop: false},
-            "lift-left": {frames: GIRLIE_LIFT_LEFT_FRAMES, loop: false},
-        }
-    });
-    k.loadSprite("lightbulb", "./sprites/lightbulb-updated.png",
-        {
-        sliceX: 3,
-        sliceY: 2,
-        anims: {
-            "off": 0,
-            "lighting": {from: 0, to: 5, loop: false, speed: 1.8},
-            "on": {frames: [4, 4, 4, 4, 4, 4, 4, 4, 5, 5], loop: true, speed: 0.3},
-        }
-    });
-    k.loadSprite("flower", "./sprites/flower.png",
-        {
-        sliceX:4,
-        sliceY: 4,
-        anims: {
-            "rest": 0,
-            "blooming": {from: 0, to: 15, loop: false, speed: 1.5},
-            "bloomed": 15,
-        }
-        }
-
-    )
-    // fonts
-    k.loadFont("wellbutrin", "./fonts/Welbut__.ttf");
-    k.loadShaderURL("halvedPattern", null, "./shaders/halvedPattern.frag");
+    loadSprites(k);
 
     // The intro wipe only plays on the very first build, not on resize rebuilds.
     let firstLoad = true;
@@ -156,9 +78,17 @@ export default async function initGame() {
         makeMarquee(k, k.vec2(0+(10*SCALE), 0+(1*SCALE)), "marquee1", "topleft");
         makeMarquee(k, k.vec2(0+(10*SCALE), k.height()-(1*SCALE)), "marquee2", "botleft");
 
+        makeGround(k);
+
         let girlie = makeGirlie(
             k,
-            k.vec2(k.center().add(0, (SCALE * DIST_FROM_CENTER_TO_GROUND_HEIGHT))),
+            mask,
+            // mask-local: horizontal center of the scene, at the shared ground line
+            // (same derivation the bulbs use). Gravity settles her onto the ground.
+            k.vec2(
+                (PARALLAX_WIDTH * SCALE) / 2,
+                (PARALLAX_HEIGHT * SCALE) / 2 + SCALE * DIST_FROM_CENTER_TO_GROUND_HEIGHT
+            ),
             30
         );
 
@@ -168,65 +98,28 @@ export default async function initGame() {
         // keep that exact placement on desktop while staying on the ground when
         // zoomed in on mobile (an unscaled +150/+75 drifts off at other scales).
         const offsetScale = SCALE / SCALE_REFERENCE;
+        let lbY = ((PARALLAX_HEIGHT * SCALE) / 2) + 75 * offsetScale;
         let lb1 = makeLightbulb(
             k,
             mask,
             k.vec2(
-                ((PARALLAX_WIDTH * SCALE) / 2) + 150 * offsetScale,
-                ((PARALLAX_HEIGHT * SCALE) / 2) + 75 * offsetScale
+                ((PARALLAX_WIDTH * SCALE) / 2) + 200 * offsetScale, lbY
             ),
+            toolboxData[0],
         )
         lb1.id = "about-me";
         attachToScroll(lb1, GROUND_SPEED);
-
-        lb1.onCollide("girlie", () => {
-            if (lb1.isOn) return;
-            lb1.isOn = true;
-
-            lb1.play("lighting");
-            lb1.onAnimEnd(anim => { if (anim === "lighting") {
-                lb1.play("on");
-                lb1.stop();
-            } })
-
-            const topCenter = k.vec2(0, -lb1.height / 2);
-            makeTooltipBox(k, lb1, topCenter, toolboxData[0], 2.5)
-        })
-
-        if (lb1.isOn) {
-            lb1.play("on");
-            lb1.stop();
-        }
 
         let lb2 = makeLightbulb(
             k,
             mask,
             k.vec2(
-                ((PARALLAX_WIDTH * SCALE) / 2) + (-250) * offsetScale,
-                ((PARALLAX_HEIGHT * SCALE) / 2) + 75 * offsetScale
+                ((PARALLAX_WIDTH * SCALE) / 2) + (-450) * offsetScale, lbY
             ),
+            toolboxData[1]
         )
         lb2.id = "contact-me";
         attachToScroll(lb2, GROUND_SPEED);
-
-        lb2.onCollide("girlie", () => {
-            if (lb2.isOn) return;
-            lb2.isOn = true;
-
-            lb2.play("lighting");
-            lb2.onAnimEnd(anim => { if (anim === "lighting") {
-                lb2.play("on");
-                lb2.stop();
-            } })
-
-            const topCenter = k.vec2(0, -lb2.height / 2);
-            makeTooltipBox(k, lb2, topCenter, toolboxData[1], 2.5)
-        })
-
-        if (lb2.isOn) {
-            lb2.play("on");
-            lb2.stop();
-        }
 
         // this is the flower bit
             /*
@@ -281,10 +174,16 @@ export default async function initGame() {
             // no intro curtain on rebuilds — reveal the scene immediately
             shaderEntity.destroy();
         }
+
+        k.onKeyPress("s", () => {
+            attachToScroll(fallFromSky(k, mask));
+        })
     }
 
     k.scene("main", () => buildScene());
     k.go("main");
+
+    
 
     // Rebuild the scene on resize so SCALE and every position are recomputed from
     // the fresh viewport — no reload needed. Registered ONCE here (outside the

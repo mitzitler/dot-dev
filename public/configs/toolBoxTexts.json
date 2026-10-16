@@ -7,12 +7,17 @@
     {
         "id": 2,
         "title": "Contacts",
-        "text": "Try clicking the contact buttons to contact me by email or linkedin - or check out my github! Or, if you just want something to copy and paste, then try this: mitzitler@gmail.com"
+        "text": "Try clicking the contact buttons to contact me by email or linkedin - or check out my github!" 
     },
     {
         "id": 3,
         "title": "Surprise?",
         "text": "'S' stands for surprise - it also stands for 'skill'. I wonder what happens if you press 'S'? I wonder what happens if you press it again?"
+    },
+    {
+        "id": 4,
+        "title": "Have Fun!",
+        "text": "I hope you have fun playing around in this environment, it's a labor of love. "
     }
 
 ]

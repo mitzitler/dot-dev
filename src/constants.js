@@ -72,5 +72,6 @@ export const TOOLTIP_PAD_PX = 14;   // inner padding from the box edge
 export const TOOLTIP_TITLE_GAP_PX = 24; // top of title → top of body
 export const TOOLTIP_LINE_PX = 4;   // extra line spacing for the body copy
 
-export const DIST_FROM_CENTER_TO_GROUND_HEIGHT = 100;
+// export const DIST_FROM_CENTER_TO_GROUND_HEIGHT = 100; this is actually distance, but for the anchor centering
+export const DIST_FROM_CENTER_TO_GROUND_HEIGHT = 155; // this is distance
 export const LOAD_IN_DURAION = 0.7;
