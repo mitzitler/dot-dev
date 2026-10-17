@@ -2,13 +2,13 @@ import { PARALLAX_WIDTH } from "../constants";
 import { getScale } from "./scale.js";
 
 const skillsDefs = [
-    { name: "btn-cpp", w: 32, isBtn: true },
-    { name: "btn-databricks", w: 32, isBtn: true },
-    { name: "btn-java", w: 32, isBtn: true },
-    { name: "btn-python", w: 32, isBtn: true },
-    { name: "btn-react", w: 32, isBtn: true },
-    { name: "btn-svelte", w: 32, isBtn: true },
-    { name: "btn-typescript", w: 32, isBtn: true },
+    { name: "btn-skill-cpp", w: 32, isBtn: true },
+    { name: "btn-skill-databricks", w: 32, isBtn: true },
+    { name: "btn-skill-java", w: 32, isBtn: true },
+    { name: "btn-skill-python", w: 32, isBtn: true },
+    { name: "btn-skill-react", w: 32, isBtn: true },
+    { name: "btn-skill-svelte", w: 32, isBtn: true },
+    { name: "btn-skill-typescript", w: 32, isBtn: true },
 ]
 
 function randomX(k) {
@@ -28,7 +28,7 @@ export function fallFromSky(k, mask) {
 
     let skillDef = k.choose(skillsDefs);
     let skill = skillDef.name;
-    // let skill = "btn-cpp";
+    // let skill = "btn-skill-cpp";
     let someTopMargin = 150;
 
     const RESTING = 0;
@@ -45,7 +45,7 @@ export function fallFromSky(k, mask) {
         k.scale(SCALE),
         k.z(9999),
 
-        skill,     // sprite-name tag (e.g. "btn-cpp")
+        skill,     // sprite-name tag (e.g. "btn-skill-cpp")
         "skill",   // shared tag so skills can detect collisions with each other
     ])
 
@@ -54,7 +54,16 @@ export function fallFromSky(k, mask) {
     // fires once per landing (each new contact after it has left the ground).
     let bounceForce = 250;
     skillEntity.onCollide("ground", () => {
-        if (bounceForce < 40) return; // too weak to matter — let it rest
+        if (bounceForce < 40) {
+            // Too weak to matter — let it rest. Freeze it as a static body: a
+            // dynamic body resting in the masked parent keeps recomputing its
+            // world collider every frame (gravity-push vs ground-resolve), which
+            // makes isHovering() flicker true/false and breaks hover/press. Static
+            // bodies don't run that resolution, so the hitbox holds still.
+            skillEntity.vel = k.vec2(0, 0);
+            skillEntity.isStatic = true;
+            return;
+        }
         skillEntity.jump(bounceForce);
         bounceForce *= 0.5;
     });
@@ -71,11 +80,18 @@ export function fallFromSky(k, mask) {
 
     // Same press/resting behavior as the Controls buttons: pressed frame while the
     // mouse is held over it, resting frame otherwise (and on hover-end).
+    //
+    // Must be onHoverUpdate, NOT onHover: onHover fires ONCE on the hover-enter
+    // edge. While the block bounces it keeps crossing a stationary cursor, so new
+    // enter-edges keep firing and it looks responsive — but once it settles there
+    // are no more edges and it would never react again. onHoverUpdate runs every
+    // frame it's hovered, so press works whether the block is moving or at rest.
     const release = () => {
         skillEntity.frame = RESTING;
     };
-    skillEntity.onHover(() => {
-        skillEntity.frame = PRESSED;
+    skillEntity.onHoverUpdate(() => {
+        if (k.isMouseDown()) skillEntity.frame = PRESSED;
+        else release();
     });
     skillEntity.onHoverEnd(release);
 

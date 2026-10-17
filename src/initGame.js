@@ -1,11 +1,12 @@
-import { PALETTE, PARALLAX_HEIGHT, PARALLAX_WIDTH, DIST_FROM_CENTER_TO_GROUND_HEIGHT, CONTACTS_Y_OFFSET, CONTACTS_Y_OFFSET_BOT, SCALE_REFERENCE } from "./constants";
+import { 
+    PALETTE, PARALLAX_HEIGHT, PARALLAX_WIDTH, DIST_FROM_CENTER_TO_GROUND_HEIGHT, 
+    CONTACTS_Y_OFFSET, CONTACTS_Y_OFFSET_BOT 
+} from "./constants";
 import makeKaplayCtx from "./kaplayCtx";
 import makeGirlie from "./entities/Girlie";
 import { makeGround } from "./entities/Ground.js";
-import makeBackground, { GROUND_SPEED, attachToScroll } from "./entities/Bg";
-import makeLightbulb from "./entities/Lightbulb";
+import makeBackground, { attachToScroll } from "./entities/Bg";
 import { fallFromSky } from "./helpers/fallFromSky.js";
-// import makeFlower from "./entities/Flower";
 import makeContacts from "./components/Contacts.js";
 import makeControls from "./components/Controls";
 import startLoadSequence from "./helpers/loadSequence";
@@ -13,15 +14,9 @@ import resizeScale from "./helpers/resizeScale";
 import { setScale, getScale } from "./helpers/scale.js";
 import { loadSprites } from "./helpers/loadSprites.js";
 import { makeMarquee } from "./components/Marquee.js";
+import { loadLightbulbs } from "./helpers/loadLightbulbs.js";
 
 export default async function initGame() {
-
-    // const generalData = await( await fetch('./configs/generalData.json')).json();
-    // const socialsData = await( await fetch('./configs/socialsData.json')).json();
-    // const skillsData = await( await fetch('./configs/skillsData.json')).json();
-    // const experiencesData = await( await fetch('./configs/experiencesData.json')).json();
-    // const projectsData = await( await fetch('./configs/projectsData.json')).json();
-    const toolboxData = await( await fetch('./configs/toolBoxTexts.json')).json();
 
     const k = makeKaplayCtx();
     k.setGravity(200);
@@ -36,8 +31,6 @@ export default async function initGame() {
 
     // ---- scene build (re-runs from scratch on every resize) ----
     function buildScene() {
-        // Single source of truth: derive the scale from the current viewport and
-        // publish it so every make* function and scroll() reads the same value.
         setScale(resizeScale(k));
         const SCALE = getScale();
 
@@ -67,9 +60,11 @@ export default async function initGame() {
 
         makeBackground(k, mask);
 
+        const pressS = () => attachToScroll(fallFromSky(k, mask));
+
         // Touch controls only — desktop is keyboard-driven.
         if (k.isTouchscreen()) {
-            makeControls(k, k.vec2(k.center().x, topLeftY+((30+PARALLAX_HEIGHT)*SCALE)));
+            makeControls(k, k.vec2(k.center().x, topLeftY+((30+PARALLAX_HEIGHT)*SCALE)), { "btn-s": pressS });
             makeContacts(k, k.vec2(k.center().x, topLeftY-(CONTACTS_Y_OFFSET*SCALE)));
         } else {
             makeContacts(k, k.vec2(k.center().x, botLeftY+(CONTACTS_Y_OFFSET_BOT*SCALE)));
@@ -80,7 +75,7 @@ export default async function initGame() {
 
         makeGround(k);
 
-        let girlie = makeGirlie(
+        makeGirlie(
             k,
             mask,
             // mask-local: horizontal center of the scene, at the shared ground line
@@ -92,65 +87,7 @@ export default async function initGame() {
             30
         );
 
-        // this needs to be quarantined better
-        // Offsets from the parallax center. They were hand-tuned as pixels at the
-        // reference (old desktop) scale, so multiply by SCALE/SCALE_REFERENCE to
-        // keep that exact placement on desktop while staying on the ground when
-        // zoomed in on mobile (an unscaled +150/+75 drifts off at other scales).
-        const offsetScale = SCALE / SCALE_REFERENCE;
-        let lbY = ((PARALLAX_HEIGHT * SCALE) / 2) + 75 * offsetScale;
-        let lb1 = makeLightbulb(
-            k,
-            mask,
-            k.vec2(
-                ((PARALLAX_WIDTH * SCALE) / 2) + 200 * offsetScale, lbY
-            ),
-            toolboxData[0],
-        )
-        lb1.id = "about-me";
-        attachToScroll(lb1, GROUND_SPEED);
-
-        let lb2 = makeLightbulb(
-            k,
-            mask,
-            k.vec2(
-                ((PARALLAX_WIDTH * SCALE) / 2) + (-450) * offsetScale, lbY
-            ),
-            toolboxData[1]
-        )
-        lb2.id = "contact-me";
-        attachToScroll(lb2, GROUND_SPEED);
-
-        // this is the flower bit
-            /*
-
-            -- the idea with the flower should be:
-            -- flower anim happens on collide, girlie watering happens on collide
-            -- nothing else happens - this is not responsible for any information delivery
-
-
-        let flower = makeFlower(
-            k,
-            mask,
-            k.vec2(
-                ((PARALLAX_WIDTH * SCALE) / 2) + 600,
-                ((PARALLAX_HEIGHT * SCALE) / 2) + 375
-            )
-        )
-        attachToScroll(flower, GROUND_SPEED);
-
-        flower.onCollide("girlie", () => {
-            if (flower.isBloomed) return;
-            flower.isBloomed = true;
-
-            girlie.play("watering-right");
-            flower.play("blooming");
-            flower.onAnimEnd(anim => { if (anim === "blooming") {
-                flower.play("bloomed");
-                flower.stop();
-            }})
-        })
-            */
+        loadLightbulbs(k, mask);
 
         const shaderProgress = { value: 0 };
         const shaderEntity = k.add([
@@ -175,21 +112,15 @@ export default async function initGame() {
             shaderEntity.destroy();
         }
 
-        k.onKeyPress("s", () => {
-            attachToScroll(fallFromSky(k, mask));
-        })
+        k.onKeyPress("s", pressS);
+
     }
 
     k.scene("main", () => buildScene());
     k.go("main");
 
-    
-
     // Rebuild the scene on resize so SCALE and every position are recomputed from
-    // the fresh viewport — no reload needed. Registered ONCE here (outside the
-    // scene callback, which would otherwise stack a handler per k.go). Debounced
-    // so dragging the window doesn't thrash rebuilds. k.go doesn't change the
-    // canvas size, so this won't re-fire itself.
+    // the fresh viewport — no reload needed. 
     let resizeTimer;
     k.onResize(() => {
         clearTimeout(resizeTimer);

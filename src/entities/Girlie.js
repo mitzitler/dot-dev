@@ -1,6 +1,6 @@
 // things to import from const: gravity
 import { scroll } from "./Bg.js";
-import { selectedDirectionBtn, store } from "../store";
+import { selectedDirectionBtn, store, isModalVisible } from "../store";
 import { getScale } from "../helpers/scale.js";
 
 export default function makeGirlie(k, mask, posVec2, speed) {
@@ -39,15 +39,21 @@ export default function makeGirlie(k, mask, posVec2, speed) {
         },
     ]);
 
-    // controls
-    // let wasLifting = false;
-
     girlie.onUpdate(() => {
 
+        let anim;
         // While a scripted action owns the girlie (e.g. watering a flower), don't let the
         // movement state machine below fight it for the animation — and since scroll() is
         // only ever called inside this loop, bailing here also freezes the world.
         if (girlie.isBusy) return;
+
+        if (store.get(isModalVisible)) {
+            anim = `idle-bw-${girlie.direction}`;
+            if (girlie.curAnim() !== anim) {
+                girlie.play(anim);
+            }
+            return;
+        }
 
         // Input comes from EITHER the keyboard OR the on-screen (touch) buttons.
         // The buttons publish the pressed direction to selectedDirectionBtn; translate
@@ -88,14 +94,8 @@ export default function makeGirlie(k, mask, posVec2, speed) {
 
         
 
-        // const isLifting = down && (left || right);
         const isRunning = shift && (left || right);
-        let anim;
 
-        // if (isLifting) {
-        //     girlie.direction = left ? "left" : "right";
-        //     anim = `lift-${girlie.direction}`;
-        // }
         if (up && left) {
             girlie.direction = "left";
             anim = `jump-${girlie.direction}`;
@@ -135,13 +135,11 @@ export default function makeGirlie(k, mask, posVec2, speed) {
             anim = `idle-${girlie.direction}`;
         }
 
-        // const justStartedLifting = isLifting && !wasLifting;
-
-        // if (justStartedLifting || (!isLifting && girlie.curAnim() !== anim)) {
-        //     girlie.play(anim);
-        // }
-
-        // wasLifting = isLifting;
+        // Only (re)start the animation when it actually changes, otherwise we'd
+        // restart it from frame 0 every tick and it'd never appear to play.
+        if (girlie.curAnim() !== anim) {
+            girlie.play(anim);
+        }
 
         // if pos is too close to the edge, stop moving ?
     })

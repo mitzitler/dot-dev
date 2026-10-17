@@ -1,5 +1,6 @@
 import { PARALLAX_HEIGHT, DIST_FROM_CENTER_TO_GROUND_HEIGHT  } from "../constants";
 import { getScale } from "../helpers/scale.js";
+import { store, isAnyModalVisibleAtom } from "../store";
 import makeTooltipBox from "../components/TooltipBox";
 
 export default function makeLightbulb(k, mask, posVec2, tooltipdata) {
@@ -122,6 +123,45 @@ export default function makeLightbulb(k, mask, posVec2, tooltipdata) {
             )
         }
     });
+
+    // Drive this bulb's focus from React, same as the background (see Bg.js).
+    // While ANY modal is open the bulb is "out of focus": it freezes on the sepia
+    // frame 6 regardless of on/off, and that supersedes whatever animation was
+    // playing. When the modal closes it resumes exactly what it was doing — the
+    // animation it was mid-way through, or the static frame it was resting on.
+    //
+    // The subscription is PER BULB (not a shared module var): there are several
+    // bulbs, so a single shared unsub would let each new bulb tear down the
+    // previous one's subscription. Clean up on destroy instead — the scene is
+    // rebuilt on resize, which destroys these and fires onDestroy, so no leak.
+    const UNFOCUS_FRAME = 6;
+    let frozen = false;      // true while held on the unfocus frame
+    let savedAnim = null;    // anim that was playing when we froze (undefined if none)
+    let savedFrame = 0;      // frame it was resting on, for the no-anim case
+
+    const syncFocus = () => {
+        if (store.get(isAnyModalVisibleAtom)) {
+            // Remember what to resume, but only on the transition INTO unfocus so a
+            // repeated fire doesn't overwrite the saved state with the sepia frame.
+            if (!frozen) {
+                savedAnim = lightbulb.curAnim();
+                savedFrame = lightbulb.frame;
+                frozen = true;
+            }
+            lightbulb.stop();              // keep the anim system from touching the frame
+            lightbulb.frame = UNFOCUS_FRAME;
+        } else if (frozen) {
+            // Back in focus: resume the prior animation, or the prior static frame.
+            if (savedAnim) lightbulb.play(savedAnim);
+            else lightbulb.frame = savedFrame;
+            frozen = false;
+        }
+    };
+    const unsubFocus = store.sub(isAnyModalVisibleAtom, syncFocus);
+    lightbulb.onDestroy(() => unsubFocus());
+    syncFocus();
+
+
 
     return lightbulb;
 

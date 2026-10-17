@@ -6,7 +6,7 @@ import { getScale } from "../helpers/scale.js";
 // touchscreen check (e.g. k.isTouchscreen()) before calling makeControls.
 // Button sprites are loaded once in initGame (assets are global in Kaplay).
 
-export default function makeControls(k, posVec2) {
+export default function makeControls(k, posVec2, handlers = {}) {
     // the pos will be the top left corner?
 
     let area;
@@ -34,54 +34,89 @@ export default function makeControls(k, posVec2) {
     // left-to-right order; w is the native (unscaled) frame width — btnScale is
     // applied by the loop below, so don't pre-scale these (wide = 48, standard = 32)
     const btnDefs = [
-        { name: "btn-leftleft", w: 48, y_offset: 0 },
-        { name: "btn-left", w: 32, y_offset: 0 },
-        { name: "btn-up", w: 32, y_offset: -36 },
-        { name: "btn-right", w: 32, y_offset: 0 },
-        { name: "btn-rightright", w: 48, y_offset: 0 },
+        { name: "btn-leftleft", w: 48, y_offset: 0, x_gap_bool: true },
+        { name: "btn-left", w: 32, y_offset: 0, x_gap_bool: true },
+        { name: "btn-up", w: 32, y_offset: -24, x_gap_bool: true },
+        { name: "btn-s", w: 32, y_offset: 24, x_gap_bool: false, action: "btn-s" },
+        { name: "btn-right", w: 32, y_offset: 0, x_gap_bool: true },
+        { name: "btn-rightright", w: 48, y_offset: 0, x_gap_bool: true },
     ];
 
-    // total row width so we can center the buttons horizontally in the bar
+    // total row width so we can center the buttons horizontally in the bar.
+    // Only the buttons laid out IN the row (x_gap_bool) count toward the width —
+    // the stacked button (btn-s sits UNDER btn-up) must not add to it at all.
+    const rowBtns = btnDefs.filter((d) => d.x_gap_bool);
     const rowWidth =
-        btnDefs.reduce((sum, d) => sum + d.w * SCALE, 0) +
-        x_gap * (btnDefs.length - 1);
+        rowBtns.reduce((sum, d) => sum + d.w * SCALE, 0) +
+        x_gap * (rowBtns.length - 1);
 
     const buttons = {};
     let cursorX = (width * SCALE - rowWidth) / 2; // left edge of the first button
+    let prevCursorX;
 
     for (const def of btnDefs) {
-        const dir = def.name.replace("_btn", ""); // "leftleft" | "left" | "up" | "right" | "rightright"
+        const dir = def.name.replace("btn-", ""); // "leftleft" | "left" | "up" | "right" | "rightright"
+        let x = def.x_gap_bool ? cursorX : prevCursorX;
         const btn = area.add([
             // local coords: parent's topleft anchor puts (0,0) at the rect's top-left corner
             k.sprite(def.name, { frame: RESTING }),
             k.scale(SCALE),
             k.anchor("left"),
-            k.pos(cursorX, midY + def.y_offset * SCALE), // scale the up-button lift like everything else
+            k.pos(x, midY + def.y_offset * SCALE), // scale the up-button lift like everything else
             k.area(),
             k.z(999),
             def.name,
         ]);
 
-        // While held: show the pressed frame AND publish this button's direction to
-        // the store. Girlie reads selectedDirectionBtn every frame and moves.
-        // Clear it on release so movement stops.
-        // NOTE: pointer/mouse-down driven, so this is meaningful on touch/mobile only.
-        const release = () => {
-            btn.frame = RESTING;
-            if (store.get(selectedDirectionBtn) === dir) store.set(selectedDirectionBtn, "");
-        };
-        btn.onHoverUpdate(() => {
-            if (k.isMouseDown()) {
-                btn.frame = PRESSED;
-                store.set(selectedDirectionBtn, dir);
-            } else {
-                release();
-            }
-        });
-        btn.onHoverEnd(release);
+        if (def.action) {
+            // Action button (e.g. btn-s) — the mobile equivalent of a key press.
+            // Fire ONCE per tap (rising edge of mouse-down while hovering), exactly
+            // like k.onKeyPress, show the pressed frame, and NEVER touch
+            // selectedDirectionBtn / movement.
+            const fn = handlers[def.action];
+            let wasDown = false;
+            btn.onHoverUpdate(() => {
+                const down = k.isMouseDown();
+                if (down && !wasDown) {
+                    btn.frame = PRESSED;
+                    fn?.();
+                } else if (!down) {
+                    btn.frame = RESTING;
+                }
+                wasDown = down;
+            });
+            btn.onHoverEnd(() => {
+                btn.frame = RESTING;
+                wasDown = false;
+            });
+        } else {
+            // Direction button: while held, show the pressed frame AND publish this
+            // button's direction to the store. Girlie reads selectedDirectionBtn every
+            // frame and moves. Clear it on release so movement stops.
+            // NOTE: pointer/mouse-down driven, so this is meaningful on touch/mobile only.
+            const release = () => {
+                btn.frame = RESTING;
+                if (store.get(selectedDirectionBtn) === dir) store.set(selectedDirectionBtn, "");
+            };
+            btn.onHoverUpdate(() => {
+                if (k.isMouseDown()) {
+                    btn.frame = PRESSED;
+                    store.set(selectedDirectionBtn, dir);
+                } else {
+                    release();
+                }
+            });
+            btn.onHoverEnd(release);
+        }
 
         buttons[def.name] = btn;
-        cursorX += def.w * SCALE + x_gap;
+        // Stacked buttons (x_gap_bool false, e.g. btn-s under btn-up) sit on top of
+        // the previous row button and must NOT advance the cursor — otherwise they
+        // add their width + a gap to the row and push everything after them over.
+        if (def.x_gap_bool) {
+            prevCursorX = cursorX;
+            cursorX += def.w * SCALE + x_gap;
+        }
     }
 
     return area;

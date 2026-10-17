@@ -1,0 +1,38 @@
+[
+    {
+        "id": "contact-me",
+        "x_offset": -250,
+        "data": {
+            "id": 1,
+            "title": "Contacts",
+            "text": "Try clicking the contact buttons to contact me by email or linkedin - or check out my github!" 
+      }
+    },
+    {
+        "id": "about-me",
+        "x_offset": 250,
+        "data": {
+            "id": 2,
+            "title": "About Me",
+            "text": "I am an engineer that leads with creativity! My name is Mitzi, welcome to the website. Try using the arrow keys to explore - everything you see is hand pixeled and wired up with Kaplay and React!"
+          }
+    },
+    {
+        "id": "press-s",
+        "x_offset": 750,
+        "data": {
+            "id": 3,
+            "title": "Surprise?",
+            "text": "'S' stands for surprise - it also stands for 'skill'. I wonder what happens if you press 'S'? I wonder what happens if you press it again?"
+        }
+    },
+    {
+        "id": "education",
+        "x_offset": 1250,
+        "data": {
+            "id": 4,
+            "title": "Education",
+            "text": "I have a Bachelors in Economics from Reed College (class of 2019) and I am currently pursuing a Masters degree in Computer Science from NYU."
+        }
+    }
+]
