@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1,
+        "title": "Email me!",
+        "text": "Please send me an email, at mitzitler@gmail.com! I'm excited to hear from you!",
+        "linkText" : "",
+        "link": ""
+    },
+    {
+        "id": 2,
+        "title": "My Github",
+        "text": "Redirecting you to my github, which has personal projects and projects from my school...",
+        "linkText" : "This Project",
+        "link": "https://github.com/mitzitler/dot-dev"
+    },
+    {
+        "id": 3,
+        "title": "My Linkedin",
+        "text": "Redirecting you to my linkedin, which has all the stuff linkedin tends to have...",
+        "linkText" : "Homepage",
+        "link": "https://www.linkedin.com/in/mitzi-zitler/"
+    }
+]
