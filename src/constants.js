@@ -64,10 +64,10 @@ export const SCALE_REFERENCE = 2.08;
 // SCALE². TooltipBox divides these targets by SCALE² so they land at the exact
 // screen px below on every device. The box is WIDE (wider than tall), so longer
 // copy stays on a few lines and fits the height instead of growing downward.
-export const TOOLTIP_WIDTH_PX = 360;
+export const TOOLTIP_WIDTH_PX = 330;
 export const TOOLTIP_HEIGHT_PX = 150;
-export const TOOLTIP_TITLE_PX = 19; // heading
-export const TOOLTIP_BODY_PX = 15;  // body — reads well for the pixel font at this size
+export const TOOLTIP_TITLE_PX = 17; // heading
+export const TOOLTIP_BODY_PX = 14;  // body — reads well for the pixel font at this size
 export const TOOLTIP_PAD_PX = 14;   // inner padding from the box edge
 export const TOOLTIP_TITLE_GAP_PX = 24; // top of title → top of body
 export const TOOLTIP_LINE_PX = 4;   // extra line spacing for the body copy
