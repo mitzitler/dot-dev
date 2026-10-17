@@ -1,70 +1,59 @@
 import { PARALLAX_WIDTH, SCALE_REFERENCE } from "../constants.js";
 import { getScale } from "../helpers/scale.js";
+import { store, isAnyModalVisibleAtom } from "../store";
 
 export const GROUND_SPEED = -16;
 let layers = null;
 let scrollingItems = [];
 
+// Each background sprite ships two frames: 0 is the normal look, 1 is the
+// desaturated/blurred "a modal is open" look. Swapping every panel's frame is
+// how Kaplay visually hands the screen over to a React modal.
+export const SCREEN_FOCUS = 0;
+export const MODAL_FOCUS = 1;
+
+// Module-level handle to the current scene's mask + its store subscription, so
+// focus can be toggled from anywhere (including React, via the store) without
+// threading `mask` through every caller. Both are reset on each rebuild.
+let bgMask = null;
+let unsubFocus = null;
+
 export function makeLayers(k, mask) {
-        const SCALE = getScale();
-        return [
-        { // clouds-back
-            speed: -1,
-            parts: [
-                mask.add([k.sprite("bg-clouds-back"), k.pos(PARALLAX_WIDTH * SCALE * -1, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-clouds-back"), k.pos(0, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-clouds-back"), k.pos(PARALLAX_WIDTH * SCALE, 0), k.scale(SCALE)]),
-            ],
-        },
-        { // clouds-front
-            speed: -2,
-            parts: [
-                mask.add([k.sprite("bg-clouds-front"), k.pos(PARALLAX_WIDTH * SCALE * -1, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-clouds-front"), k.pos(0, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-clouds-front"), k.pos(PARALLAX_WIDTH * SCALE, 0), k.scale(SCALE)]),
-            ],
-        },
-        { // mountains
-            speed: -3,
-            parts: [
-                mask.add([k.sprite("bg-mountains"), k.pos(PARALLAX_WIDTH * SCALE * -1, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-mountains"), k.pos(0, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-mountains"), k.pos(PARALLAX_WIDTH * SCALE, 0), k.scale(SCALE)]),
-            ],
-        },
-        { // hills
-            speed: -4,
-            parts: [
-                mask.add([k.sprite("bg-hills"), k.pos(PARALLAX_WIDTH * SCALE * -1, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-hills"), k.pos(0, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-hills"), k.pos(PARALLAX_WIDTH * SCALE, 0), k.scale(SCALE)]),
-            ],
-        },
-        { // trees-back
-            speed: -6,
-            parts: [
-                mask.add([k.sprite("bg-trees-back"), k.pos(PARALLAX_WIDTH * SCALE * -1, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-trees-back"), k.pos(0, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-trees-back"), k.pos(PARALLAX_WIDTH * SCALE, 0), k.scale(SCALE)]),
-            ],
-        },
-        { // trees-front
-            speed: -8,
-            parts: [
-                mask.add([k.sprite("bg-trees-front"), k.pos(PARALLAX_WIDTH * SCALE * -1, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-trees-front"), k.pos(0, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-trees-front"), k.pos(PARALLAX_WIDTH * SCALE, 0), k.scale(SCALE)]),
-            ],
-        },
-        { // ground
-            speed: GROUND_SPEED,
-            parts: [
-                mask.add([k.sprite("bg-ground"), k.pos(PARALLAX_WIDTH * SCALE * -1, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-ground"), k.pos(0, 0), k.scale(SCALE)]),
-                mask.add([k.sprite("bg-ground"), k.pos(PARALLAX_WIDTH * SCALE, 0), k.scale(SCALE)]),
-            ],
-        },
-    ]
+    const SCALE = getScale();
+    // Every panel is tagged "bg" so setBgFocus() can find them all — and only
+    // them — regardless of which parallax layer they belong to.
+    const panel = (name, x) =>
+        mask.add([
+            k.sprite(name, { frame: SCREEN_FOCUS }),
+            k.pos(x, 0),
+            k.scale(SCALE),
+            "bg",
+        ]);
+    // Three side-by-side copies per layer so scroll() can recycle them endlessly.
+    const triple = (name) => [
+        panel(name, PARALLAX_WIDTH * SCALE * -1),
+        panel(name, 0),
+        panel(name, PARALLAX_WIDTH * SCALE),
+    ];
+    return [
+        { speed: -1,           parts: triple("bg-clouds-back") },
+        { speed: -2,           parts: triple("bg-clouds-front") },
+        { speed: -3,           parts: triple("bg-mountains") },
+        { speed: -4,           parts: triple("bg-hills") },
+        { speed: -6,           parts: triple("bg-trees-back") },
+        { speed: -8,           parts: triple("bg-trees-front") },
+        { speed: GROUND_SPEED, parts: triple("bg-ground") },
+    ];
+}
+
+// Swap every background panel between its normal (0) and modal-dimmed (1) frame.
+// Tag-scoped to "bg" so the girlie and other animated sprites are left alone.
+// Safe to call before the scene exists (no-ops until a mask is registered).
+export function setBgFocus(focus) {
+    if (!bgMask) return;
+    for (const panel of bgMask.get("bg")) {
+        panel.frame = focus;
+    }
 }
 
 export default function makeBackground(k, mask) {
@@ -76,19 +65,28 @@ export default function makeBackground(k, mask) {
     // entries that point at destroyed objects from the previous build.
     scrollingItems = [];
 
+    bgMask = mask;
+
     mask.add([
-        k.sprite("bg-sky"),
+        k.sprite("bg-sky", { frame: SCREEN_FOCUS }),
         k.scale(SCALE),
-        k.pos(0, 0)
+        k.pos(0, 0),
+        "bg",
     ]);
 
     layers = makeLayers(k, mask);
 
-    // k.add([
-    //     k.sprite("bg-frame"), 
-    //     k.scale(SCALE),
-    //     k.pos(mask.pos.x, mask.pos.y) // 0,0 is the top left corner FWIW
-    // ]);
+    // Drive focus from React: whenever a modal opens or closes, flip every "bg"
+    // panel into MODAL_FOCUS / SCREEN_FOCUS. The scene is rebuilt on resize, so
+    // tear down the previous subscription first — otherwise stale listeners
+    // pointing at destroyed masks would stack up. Sync once immediately in case
+    // a modal is already open at rebuild time.
+    if (unsubFocus) unsubFocus();
+    const syncFocus = () =>
+        setBgFocus(store.get(isAnyModalVisibleAtom) ? MODAL_FOCUS : SCREEN_FOCUS);
+    unsubFocus = store.sub(isAnyModalVisibleAtom, syncFocus);
+    syncFocus();
+
 };
 
 export function attachToScroll(gameObj, speed = GROUND_SPEED) {
