@@ -64,7 +64,16 @@ export default async function initGame() {
 
         // Touch controls only — desktop is keyboard-driven.
         if (k.isTouchscreen()) {
-            makeControls(k, k.vec2(k.center().x, topLeftY+((30+PARALLAX_HEIGHT)*SCALE)), { "btn-s": pressS });
+            // Pin the touch controls just above the bottom marquee (anchored to the
+            // VIEWPORT bottom, not the scene) so the stacked S button never overlaps
+            // it, however tall the zoomed scene is on a given device. Structural px
+            // below the control anchor: the bottom marquee rises ~29px from the
+            // viewport bottom (28 tall + 1px it sits off the edge) and the control
+            // cluster drops ~80px to the S button's base; MARQUEE_CLEARANCE is the gap
+            // (one full standard control button tall, 32px, so it sits clearly above).
+            const MARQUEE_CLEARANCE = 32;
+            const controlsY = k.height() - (29 + 80 + MARQUEE_CLEARANCE) * SCALE;
+            makeControls(k, k.vec2(k.center().x, controlsY), { "btn-s": pressS });
             makeContacts(k, k.vec2(k.center().x, topLeftY-(CONTACTS_Y_OFFSET*SCALE)));
         } else {
             makeContacts(k, k.vec2(k.center().x, botLeftY+(CONTACTS_Y_OFFSET_BOT*SCALE)));
