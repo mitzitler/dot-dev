@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"github.com/gin-contrib/cors"
 	goaway "github.com/TwiN/go-away"
 )
 
@@ -23,6 +24,12 @@ const (
 )
 func main() {
 	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"http://localhost:5173"}, // also the actual dev website
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{"Content-Type"},
+	}))
 	
 	r.POST("/guestbook", middleware.RateLimit(rdb, 5, 60), func(ctx *gin.Context) {
 		var marqueemessage cache.MarqueeMessage
