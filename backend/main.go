@@ -1,0 +1,143 @@
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"unicode/utf8"
+
+	"github.com/mitzitler/mitzi-dot-dev/backend/cache"
+	"github.com/mitzitler/mitzi-dot-dev/backend/internal/middleware"
+
+	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
+	goaway "github.com/TwiN/go-away"
+)
+
+var (
+	redisCache = cache.NewRedisCache("localhost:6379", 0, 1)
+	rdb        = redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+)
+const (
+	maxMsgLength = 28 
+	maxNameLength = 6 
+)
+func main() {
+	r := gin.Default()
+	
+	r.POST("/guestbook", middleware.RateLimit(rdb, 5, 60), func(ctx *gin.Context) {
+		var marqueemessage cache.MarqueeMessage
+		if err := ctx.ShouldBind(&marqueemessage); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(), 
+			})
+			return
+		}
+		// check length
+		lenMsg := utf8.RuneCountInString(marqueemessage.Msg)
+		lenName := utf8.RuneCountInString(marqueemessage.Name)
+		if lenMsg == 0 || lenName == 0 || lenMsg > maxMsgLength || lenName > maxNameLength {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": "name or message is empty or too long",
+			})
+			return
+		}
+		// check profanity
+		profaneMsg := goaway.IsProfane(marqueemessage.Msg)
+		profaneName := goaway.IsProfane(marqueemessage.Name)
+		if profaneMsg || profaneName {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": "please keep it friendly",
+			})
+			return
+		}
+
+		res, err := redisCache.CreateMessage(&marqueemessage)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"marqueemessage": res,
+		})
+	})
+
+	r.GET("/guestbook", func(ctx *gin.Context){
+		marqueemessages, err := redisCache.GetMessages()
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"marqueemessages": marqueemessages,
+		})
+	})
+
+	r.GET("/guestbook/:id", func(ctx *gin.Context) {
+		id := ctx.Param("id")
+		marqueemessage, err := redisCache.GetMessage(id)
+		if err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"message": "marquee message not found",
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"marqueemessage": marqueemessage,
+		})
+	})
+
+	r.PUT("/guestbook/:id", func(ctx *gin.Context) {
+		id := ctx.Param("id")
+		res, err := redisCache.GetMessage(id)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		var marqueemessage cache.MarqueeMessage
+
+		if err := ctx.ShouldBind(&marqueemessage); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		res.Name = marqueemessage.Name
+		res.Msg = marqueemessage.Msg
+		res, err = redisCache.UpdateMessage(res)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"marqueemessage": res,
+		})
+	})
+
+	r.DELETE("/guestbook/:id", func(ctx *gin.Context) {
+		id := ctx.Param("id")
+		err := redisCache.DeleteMessage(id)
+		if err != nil {
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "marquee message deleted successfully",
+		})
+	})
+
+	fmt.Println(r.Run(":8080"))
+}
