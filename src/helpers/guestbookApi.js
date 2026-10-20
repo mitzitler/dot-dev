@@ -22,12 +22,12 @@ async function request(path, options={}) {
 
 // GET 1
 export function getMessage({ id }) {
-    return request(`./guestbook/${id}`);
+    return request(`/guestbook/${id}`);
 }
 
 // GET ALL
 export function getMessages() {
-    return request("./guestbook");
+    return request("/guestbook");
 }
 
 // POST
