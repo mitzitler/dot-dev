@@ -18,6 +18,7 @@
 import { LOAD_IN_DURAION } from "../constants.js";
 import { getScale } from "./scale.js";
 import centerUpLoad from "./centerUpLoad.js";
+import { loadSequenceFinished, store } from "../store.js";
 
 // native pixel dimensions of public/sprites/nametag.png
 const NAMETAG_WIDTH = 373; // small = 128
@@ -80,4 +81,6 @@ export default async function startLoadSequence(k, shaderEntity, shaderProgress)
     }, k.easings.linear);
     hideMask.destroy();
     shaderEntity.destroy();
+
+    store.set(loadSequenceFinished, true);
 }

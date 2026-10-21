@@ -13,7 +13,7 @@ import startLoadSequence from "./helpers/loadSequence";
 import resizeScale from "./helpers/resizeScale";
 import { setScale, getScale } from "./helpers/scale.js";
 import { loadSprites } from "./helpers/loadSprites.js";
-import { makeMarquee } from "./components/Marquee.js";
+// import { makeMarquee } from "./components/Marquee.js";
 import { loadLightbulbs } from "./helpers/loadLightbulbs.js";
 
 export default async function initGame() {
@@ -33,6 +33,10 @@ export default async function initGame() {
     function buildScene() {
         setScale(resizeScale(k));
         const SCALE = getScale();
+
+        // React marquee strips (Marquee.jsx) size off this. Kept at the old sprite
+        // strip height so the touch-control clearance below (the `29`) still holds.
+        document.documentElement.style.setProperty("--marquee-h", `${28 * SCALE}px`);
 
         // permanent 50/50 background, sits behind the mask/parallax scene forever.
         // Uses k.width()/k.height(), so it must live here to track the viewport.
@@ -79,8 +83,8 @@ export default async function initGame() {
             makeContacts(k, k.vec2(k.center().x, botLeftY+(CONTACTS_Y_OFFSET_BOT*SCALE)));
         }
 
-        makeMarquee(k, k.vec2(0+(10*SCALE), 0+(1*SCALE)), "marquee1", "topleft");
-        makeMarquee(k, k.vec2(0+(10*SCALE), k.height()-(1*SCALE)), "marquee2", "botleft");
+        // makeMarquee(k, k.vec2(0+(10*SCALE), 0+(1*SCALE)), "marquee1", "topleft");
+        // makeMarquee(k, k.vec2(0+(10*SCALE), k.height()-(1*SCALE)), "marquee2", "botleft");
 
         makeGround(k);
 

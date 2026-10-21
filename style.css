@@ -84,3 +84,54 @@ html {
     font-family: 'welbutrin';
     font-size: smaller;
 }
+
+.marquee-container {
+    position: fixed;
+    left: 0;
+    width: 100%;
+    height: var(--marquee-h, 36px);
+    overflow: hidden;
+    pointer-events: none;
+    container-type: size;
+}
+
+.marquee-container.top { 
+    top: 0;
+    margin-top: 2px;
+}
+.marquee-container.btm { 
+    bottom: 0; 
+    margin-bottom: 2px;
+}
+
+.marquee-track {
+    display: flex;
+    width: max-content;
+    height: 100%;
+    animation: marquee-scroll var(--marquee-dur, 60s) linear infinite;
+    will-change: transform;
+}
+
+.marquee {
+    font-family: 'welbutrin';
+    transform: scaleY(1.4);
+    transform-origin: center;
+
+    flex-shrink: 0;
+    margin: 0;
+    white-space: nowrap;
+    font-size: 100cqh;
+    line-height: 1;
+}
+
+.marquee.top { color: var(--colorBrownDark) }
+.marquee.btm { color: var(--colorBeige) }
+
+@keyframes marquee-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .marquee-track {animation: none; }
+}

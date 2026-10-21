@@ -1,5 +1,7 @@
 import { atom, createStore } from "jotai";
 
+export const loadSequenceFinished = atom(false);
+
 export const isModalVisible = atom(false);
 export const chosenModalDataAtom = atom({
     "id": 0,

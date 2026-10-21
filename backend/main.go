@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"unicode/utf8"
 
 	"github.com/mitzitler/mitzi-dot-dev/backend/cache"
@@ -129,6 +130,20 @@ func main() {
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"marqueemessage": res,
+		})
+	})
+
+	// wipe the whole guestbook; needs X-Admin-Token == $GUESTBOOK_ADMIN_TOKEN.
+	// X-Admin-Token is deliberately not in CORS AllowHeaders, so browsers can't send it.
+	r.DELETE("/guestbook", middleware.RequireAdmin(os.Getenv("GUESTBOOK_ADMIN_TOKEN")), func(ctx *gin.Context) {
+		if err := redisCache.DeleteMessages(); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "all marquee messages deleted",
 		})
 	})
 

@@ -23,6 +23,7 @@ type MarqueeMessageService interface {
 	CreateMessage(marqueemessage *MarqueeMessage) (*MarqueeMessage, error)
 	UpdateMessage(marqueemessage *MarqueeMessage) (*MarqueeMessage, error)
 	DeleteMessage(id string) error
+	DeleteMessages() error
 }
 
 // does this go here?
@@ -122,4 +123,10 @@ func (cache redisCache) DeleteMessage(id string) error {
 		return err
 	}
 	return nil
+}
+
+func (cache redisCache) DeleteMessages() error {
+	ctx := context.Background()
+	c := cache.getClient()
+	return c.Del(ctx, "marqueemessages").Err()
 }
